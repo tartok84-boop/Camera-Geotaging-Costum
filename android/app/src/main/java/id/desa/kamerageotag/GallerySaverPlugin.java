@@ -35,10 +35,16 @@ public class GallerySaverPlugin extends Plugin {
             v.put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg");
             v.put(MediaStore.Images.Media.DATE_TAKEN, System.currentTimeMillis());
             if (Build.VERSION.SDK_INT >= 29) {
-                v.put(MediaStore.Images.Media.RELATIVE_PATH, Environment.DIRECTORY_PICTURES + "/Kamera Geotag");
+                v.put(MediaStore.Images.Media.RELATIVE_PATH, Environment.DIRECTORY_DCIM + "/Kamera Geotag");
                 v.put(MediaStore.Images.Media.IS_PENDING, 1);
             }
-            Uri uri = resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, v);
+            Uri uri = null;
+            try {
+                uri = resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, v);
+            } catch (Exception first) {
+                v.remove(MediaStore.Images.Media.RELATIVE_PATH);
+                uri = resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, v);
+            }
             if (uri == null) {
                 call.reject("Gagal membuat berkas di galeri");
                 return;
@@ -59,7 +65,7 @@ public class GallerySaverPlugin extends Plugin {
             res.put("uri", uri.toString());
             call.resolve(res);
         } catch (Exception e) {
-            call.reject("Gagal menyimpan: " + e.getMessage());
+            call.reject("Gagal menyimpan: " + e.toString());
         }
     }
 }

@@ -8,114 +8,141 @@
 :root{--bg:#f2f4f7;--cd:#fff;--tx:#17202a;--mu:#667085;--ac:#0f766e;--bd:#dde1e7}
 @media(prefers-color-scheme:dark){:root{--bg:#101316;--cd:#1a2026;--tx:#eceff3;--mu:#97a1ad;--ac:#2dd4bf;--bd:#2b333b}}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{margin:0}
-body{background:var(--bg);color:var(--tx);font:15px/1.4 system-ui,sans-serif;padding:env(safe-area-inset-top) env(safe-area-inset-right) calc(84px + env(safe-area-inset-bottom)) env(safe-area-inset-left)}
-.w{max-width:1100px;margin:0 auto;padding:10px}
-h1{font-size:18px;margin:2px 0 10px}
-.g{display:grid;gap:10px;grid-template-columns:minmax(0,1fr)}
-@media(orientation:landscape) and (min-width:620px){.g{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.pv{position:sticky;top:8px;align-self:start}}
+html,body{height:100%;margin:0;overflow:hidden;background:#000;color:var(--tx);font:15px/1.4 system-ui,sans-serif}
+button,select,input{touch-action:manipulation}
+#stage{position:fixed;inset:0;display:flex;flex-direction:column;background:#000;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
+#view{position:relative;flex:1;min-height:0;min-width:0;background:#111;overflow:hidden}
+#vid{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+#ov{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+#chip{position:absolute;top:8px;left:8px;background:#0008;color:#fff;font-size:12px;padding:4px 10px;border-radius:14px}
+#btnSet{position:absolute;top:6px;right:8px}
+#msg{position:absolute;left:12px;right:12px;top:42%;text-align:center;color:#fff;background:#000a;border-radius:10px;padding:10px;font-size:14px;display:none}
+.ib{width:46px;height:46px;border-radius:50%;border:0;background:#0009;color:#fff;display:flex;align-items:center;justify-content:center;font-size:20px;padding:0}
+.ib svg{width:24px;height:24px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+#ctl{flex:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:10px 12px;background:#000}
+.chips{display:flex;gap:8px}
+.chips button{border:1px solid #555;background:#000;color:#ddd;border-radius:16px;padding:6px 16px;font:inherit;font-size:13px}
+.chips button.on{background:#fff;color:#000;border-color:#fff}
+.row3{display:flex;align-items:center;justify-content:center;gap:34px}
+.row3 .ib{background:#222}
+#shut{width:72px;height:72px;border-radius:50%;background:#fff;border:5px solid #8a8a8a;padding:0}
+#shut:active{background:#ccc}
+#shut:disabled{opacity:.5}
+@media(orientation:landscape){#stage{flex-direction:row}#ctl{width:130px;flex-direction:column}.chips{flex-direction:column}.row3{flex-direction:column;gap:20px}}
+.sheet{position:fixed;inset:0;z-index:20;background:var(--bg);overflow-y:auto;display:none;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
+.hd{position:sticky;top:0;z-index:2;display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--cd);border-bottom:1px solid var(--bd);font-weight:700}
+.hd button{border:0;background:none;color:var(--tx);font-size:22px;padding:2px 8px}
+.in{max-width:640px;margin:0 auto;padding:10px}
 .c{background:var(--cd);border:1px solid var(--bd);border-radius:12px;padding:12px;margin-bottom:10px}
-.seg{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:10px}
-.seg button{padding:10px 4px;font-size:13px;background:var(--cd);color:var(--tx);border:1px solid var(--bd)}
-.seg button.on{background:var(--ac);color:#fff;border-color:var(--ac)}
+.c b{display:block;margin-bottom:2px}
 label{display:block;font-size:13px;color:var(--mu);margin:10px 0 4px}
 input[type=text],input[type=datetime-local],textarea,select{width:100%;padding:10px;font:inherit;font-size:16px;border:1px solid var(--bd);border-radius:10px;background:var(--bg);color:var(--tx)}
 textarea{min-height:64px;resize:vertical}
-.k{display:flex;align-items:center;gap:8px;margin:8px 0}
-.k input{width:20px;height:20px}
+.k{display:flex;align-items:center;gap:8px;margin:8px 0}.k input{width:20px;height:20px}
 .r{display:flex;gap:8px}.r>*{flex:1}
-button{border:0;border-radius:10px;padding:11px;font:inherit;font-weight:600;background:var(--ac);color:#fff}
-button.s{background:var(--bd);color:var(--tx)}
-button:disabled{opacity:.5}
+.bt{border:0;border-radius:10px;padding:11px;font:inherit;font-weight:600;background:var(--ac);color:#fff;width:100%}
+.bt.s{background:var(--bd);color:var(--tx)}
 .i{font-size:13px;color:var(--mu);margin:0 0 6px}
 .pr{white-space:pre-wrap;font-size:13px;background:#000a;color:#fff;border-radius:8px;padding:8px;margin-top:8px}
-.im{background:#000;border-radius:10px;min-height:140px;display:flex;align-items:center;justify-content:center;color:#889}
-#hasil{max-width:100%;max-height:calc(100vh - 220px);display:none;border-radius:10px}
-.bar{position:fixed;left:0;right:0;bottom:0;padding:10px 12px calc(10px + env(safe-area-inset-bottom));background:var(--cd);border-top:1px solid var(--bd)}
-.bar button{width:100%;max-width:1076px;display:block;margin:0 auto;font-size:17px;padding:14px}
-#toast{position:fixed;left:12px;right:12px;bottom:calc(90px + env(safe-area-inset-bottom));background:#222;color:#fff;border-radius:10px;padding:10px 12px;text-align:center;display:none;z-index:9}
+#hasil{display:block;max-width:100%;max-height:calc(100vh - 190px);margin:0 auto;border-radius:10px;background:#000}
 .h{display:none}
-button,select,input{touch-action:manipulation}
+#toast{position:fixed;left:12px;right:12px;bottom:130px;background:#222;color:#fff;border-radius:10px;padding:10px 12px;text-align:center;display:none;z-index:40}
 #err{position:fixed;top:0;left:0;right:0;z-index:99;background:#b00020;color:#fff;font-size:12px;padding:6px 10px;white-space:pre-wrap;display:none}
 </style>
 </head>
 <body>
-<div class="w">
-<h1>📍 Kamera Geotag</h1>
-<div class="g">
-<div class="cl">
-  <div class="seg" id="seg">
-    <button data-m="normal">Foto Normal<br>(data asli)</button>
-    <button data-m="kamera">Kamera<br>Custom</button>
-    <button data-m="galeri">Galeri<br>Custom</button>
+<div id="stage">
+  <div id="view">
+    <video id="vid" playsinline autoplay muted></video>
+    <canvas id="ov"></canvas>
+    <div id="chip"></div>
+    <button class="ib" id="btnSet" aria-label="Pengaturan"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
+    <div id="msg"></div>
   </div>
-  <div class="c">
-    <p class="i" id="info"></p>
-    <label>Judul foto (opsional)</label>
-    <input type="text" id="judul" placeholder="cth: Survei Jalan Usaha Tani">
+  <div id="ctl">
+    <div class="chips" id="seg"><button data-m="normal">Normal</button><button data-m="kamera">Custom</button></div>
+    <div class="row3">
+      <button class="ib" id="btnGal" aria-label="Galeri">🖼️</button>
+      <button id="shut" aria-label="Ambil foto"></button>
+      <button class="ib" id="btnFlip" aria-label="Balik kamera">🔄</button>
+    </div>
+  </div>
+</div>
 
-    <div id="boxNormal">
-      <div class="i" id="gpsSt" style="margin-top:10px">GPS: belum dicek</div>
-      <button class="s" id="btnGps" style="width:100%">🔄 Cek GPS &amp; Alamat</button>
+<div class="sheet" id="set">
+  <div class="hd"><button id="setBack" aria-label="Kembali">←</button>Pengaturan</div>
+  <div class="in">
+    <div class="c">
+      <b>Mode</b>
+      <p class="i" id="info"></p>
+      <label>Judul foto (opsional)</label>
+      <input type="text" id="judul" placeholder="cth: Survei Jalan Usaha Tani">
     </div>
 
-    <div id="boxCustom" class="h">
+    <div class="c">
+      <b>Tampilkan di watermark</b>
+      <div class="i">Centang bagian yang ingin muncul.</div>
+      <div class="k"><input type="checkbox" id="tMap" checked><span>Peta lokasi (butuh internet)</span></div>
+      <div class="k"><input type="checkbox" id="tJudul" checked><span>Judul</span></div>
+      <div class="k"><input type="checkbox" id="tAlamat" checked><span>Alamat</span></div>
+      <div class="k"><input type="checkbox" id="tKoor" checked><span>Koordinat</span></div>
+      <div class="k"><input type="checkbox" id="tWaktu" checked><span>Tanggal &amp; jam</span></div>
+      <div class="k"><input type="checkbox" id="tKet" checked><span>Ketinggian</span></div>
+      <div class="k"><input type="checkbox" id="tArah" checked><span>Arah (kompas)</span></div>
+      <div class="r">
+        <div><label>Jenis peta</label><select id="mapStyle"><option value="osm">Jalan</option><option value="sat">Satelit</option></select></div>
+        <div><label>Zoom peta</label><select id="mapZoom"><option value="15">Jauh</option><option value="16">Sedang</option><option value="17" selected>Dekat</option><option value="18">Sangat dekat</option></select></div>
+      </div>
+      <div class="r">
+        <div><label>Posisi</label><select id="posisi"><option value="bawah">Bawah</option><option value="atas">Atas</option></select></div>
+        <div><label>Ukuran teks</label><select id="ukuran"><option value="0.75">Kecil</option><option value="1" selected>Sedang</option><option value="1.35">Besar</option></select></div>
+      </div>
+      <div class="pr" id="pr"></div>
+    </div>
+
+    <div class="c">
+      <b>Data custom</b>
+      <div class="i">Dipakai di mode Custom dan untuk foto dari galeri.</div>
       <label>Koordinat</label>
-      <input type="text" id="koor" placeholder="-7.812345, 110.912345" inputmode="text">
+      <input type="text" id="koor" placeholder="-7.812345, 110.912345">
       <label>Alamat / keterangan lokasi</label>
       <textarea id="alamat" placeholder="Dusun, Desa, Kecamatan, Kabupaten"></textarea>
-      <button class="s" id="btnIsi" style="width:100%;margin-top:6px">📍 Isi koordinat &amp; alamat dari GPS</button>
-      <label>Ketinggian (mdpl) &middot; kosong = otomatis dari koordinat</label>
+      <button class="bt s" id="btnIsi" style="margin-top:6px">📍 Isi koordinat &amp; alamat dari GPS</button>
+      <label>Ketinggian (mdpl), kosong = otomatis dari koordinat</label>
       <input type="text" id="ket" inputmode="decimal" placeholder="756">
       <label>Arah</label>
-      <div class="r"><input type="text" id="arah" placeholder="120° Tenggara"><button class="s" id="btnArah" style="flex:0 0 auto">🧭 Kompas</button></div>
+      <div class="r"><input type="text" id="arah" placeholder="120° Tenggara"><button class="bt s" id="btnArah" style="flex:0 0 auto;width:auto">🧭 Kompas</button></div>
       <label>Tanggal &amp; jam</label>
-      <select id="tglMode">
-        <option value="now">Otomatis (saat ini)</option>
-        <option value="file">Sesuai waktu file foto</option>
-        <option value="manual">Atur manual</option>
-      </select>
+      <select id="tglMode"><option value="now">Otomatis (saat ini)</option><option value="file">Sesuai waktu file foto (galeri)</option><option value="manual">Atur manual</option></select>
       <input type="datetime-local" id="tglVal" class="h" style="margin-top:6px" step="1">
     </div>
-  </div>
 
-  <div class="c">
-    <b>Tampilkan di watermark</b>
-    <div class="i">Centang bagian yang ingin muncul.</div>
-    <div class="k"><input type="checkbox" id="tMap" checked><span>Peta lokasi (butuh internet)</span></div>
-    <div class="k"><input type="checkbox" id="tJudul" checked><span>Judul</span></div>
-    <div class="k"><input type="checkbox" id="tAlamat" checked><span>Alamat</span></div>
-    <div class="k"><input type="checkbox" id="tKoor" checked><span>Koordinat</span></div>
-    <div class="k"><input type="checkbox" id="tWaktu" checked><span>Tanggal &amp; jam</span></div>
-    <div class="k"><input type="checkbox" id="tKet" checked><span>Ketinggian</span></div>
-    <div class="k"><input type="checkbox" id="tArah" checked><span>Arah (kompas)</span></div>
-    <div class="r">
-      <div><label>Jenis peta</label><select id="mapStyle"><option value="osm">Jalan</option><option value="sat">Satelit</option></select></div>
-      <div><label>Zoom peta</label><select id="mapZoom"><option value="15">Jauh</option><option value="16">Sedang</option><option value="17" selected>Dekat</option><option value="18">Sangat dekat</option></select></div>
+    <div class="c">
+      <b>Data asli (mode Normal)</b>
+      <div class="i" id="gpsSt">GPS: belum dicek</div>
+      <button class="bt s" id="btnGps">🔄 Cek GPS &amp; alamat</button>
     </div>
-    <div class="r">
-      <div><label>Posisi</label><select id="posisi"><option value="bawah">Bawah</option><option value="atas">Atas</option></select></div>
-      <div><label>Ukuran teks</label><select id="ukuran"><option value="0.75">Kecil</option><option value="1" selected>Sedang</option><option value="1.35">Besar</option></select></div>
-    </div>
-    <div class="k" style="margin-top:12px"><input type="checkbox" id="auto" checked><span>Simpan otomatis ke galeri</span></div>
-    <div class="pr" id="pr"></div>
-  </div>
-</div>
 
-<div class="pv">
-  <div class="c">
-    <div class="im" id="im"><span id="kosong">Hasil foto tampil di sini</span><img id="hasil" alt="Hasil"></div>
-    <div class="i" id="st" style="margin-top:8px"></div>
-    <div class="r">
-      <button class="s" id="btnSimpan" disabled>💾 Simpan ke Galeri</button>
-      <button class="s" id="btnBagi" disabled>↗ Bagikan</button>
+    <div class="c">
+      <b>Penyimpanan &amp; kamera</b>
+      <div class="k"><input type="checkbox" id="auto" checked><span>Simpan otomatis ke galeri (DCIM/Kamera Geotag)</span></div>
+      <div class="k"><input type="checkbox" id="sysCam"><span>Pakai kamera bawaan HP (resolusi penuh, tanpa preview langsung)</span></div>
     </div>
   </div>
 </div>
-</div>
+
+<div class="sheet" id="res" style="background:#000">
+  <div class="hd" style="background:#111;color:#fff;border-color:#333"><button id="resBack" style="color:#fff" aria-label="Tutup">←</button>Hasil foto</div>
+  <div class="in">
+    <div style="padding:8px 0"><img id="hasil" alt="Hasil"></div>
+    <div class="i" id="rst" style="color:#ccc;text-align:center"></div>
+    <div class="r" style="margin-top:8px">
+      <button class="bt s" id="btnSimpan" disabled>💾 Simpan ke galeri</button>
+      <button class="bt" id="btnAgain">📷 Foto lagi</button>
+    </div>
+  </div>
 </div>
 
-<div class="bar"><button id="go">📷 Ambil Foto</button></div>
 <div id="toast"></div>
 <div id="err"></div>
 <input type="file" id="fCam" accept="image/*" capture="environment" hidden>
@@ -132,12 +159,14 @@ const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const MAXSIDE=2560;
 const native=!!(window.Capacitor&&Capacitor.isNativePlatform&&Capacitor.isNativePlatform());
 let GS=null;try{if(native)GS=Capacitor.registerPlugin('GallerySaver')}catch(e){}
-let mode='normal',pending=null,lastPos=null,lastAddr=null,lastBlob=null,lastSaved=true,lastUrl=null,busy=false;
+let mode='normal',facing='environment',stream=null,starting=false,camOn=false,busy=false;
+let lastPos=null,lastAddr=null,lastAddrTry=0,addrBusy=false,curHeading=null,gpsId=null,oriT=0;
+let lastBlob=null,lastSaved=true,lastUrl=null,pending=null,pendH=null,ovBusy=false,sheet='';
 
 /* ---------- pengaturan ---------- */
-const KEYS=['judul','koor','alamat','tJudul','tKoor','tAlamat','tWaktu','tKet','tArah','ket','arah','tMap','mapStyle','mapZoom','posisi','ukuran','auto','tglMode'];
-function save(){try{const s={mode};KEYS.forEach(k=>{const e=$(k);s[k]=e.type==='checkbox'?e.checked:e.value});localStorage.setItem('geotag2',JSON.stringify(s))}catch(e){}}
-function load(){try{const s=JSON.parse(localStorage.getItem('geotag2')||'{}');if(s.mode)mode=s.mode;KEYS.forEach(k=>{if(!(k in s))return;const e=$(k);e.type==='checkbox'?e.checked=s[k]:e.value=s[k]})}catch(e){}}
+const KEYS=['judul','koor','alamat','ket','arah','tJudul','tKoor','tAlamat','tWaktu','tKet','tArah','tMap','mapStyle','mapZoom','posisi','ukuran','auto','sysCam','tglMode'];
+function save(){try{const s={mode};KEYS.forEach(k=>{const e=$(k);s[k]=e.type==='checkbox'?e.checked:e.value});localStorage.setItem('geotag3',JSON.stringify(s))}catch(e){}}
+function load(){try{const s=JSON.parse(localStorage.getItem('geotag3')||'{}');if(s.mode==='kamera'||s.mode==='normal')mode=s.mode;KEYS.forEach(k=>{if(!(k in s))return;const e=$(k);e.type==='checkbox'?e.checked=s[k]:e.value=s[k]})}catch(e){}}
 
 /* ---------- util ---------- */
 const p2=n=>String(n).padStart(2,'0');
@@ -145,9 +174,13 @@ function fmt(d){const z=-d.getTimezoneOffset(),zn={420:'WIB',480:'WITA',540:'WIT
  return d.toLocaleDateString('id-ID',{day:'2-digit',month:'long',year:'numeric'})+' '+p2(d.getHours())+':'+p2(d.getMinutes())+':'+p2(d.getSeconds())+' '+zn}
 function localISO(d){return d.getFullYear()+'-'+p2(d.getMonth()+1)+'-'+p2(d.getDate())+'T'+p2(d.getHours())+':'+p2(d.getMinutes())+':'+p2(d.getSeconds())}
 function toast(t){const e=$('toast');e.textContent=t;e.style.display='block';clearTimeout(toast.t);toast.t=setTimeout(()=>e.style.display='none',2800)}
+function note(t){const e=$('msg');e.textContent=t||'';e.style.display=t?'block':'none'}
 function dist(a,b){const dx=(a.longitude-b.longitude)*111320*Math.cos(a.latitude*Math.PI/180),dy=(a.latitude-b.latitude)*110540;return Math.hypot(dx,dy)}
+const koorTxt=(c,acc)=>c.latitude.toFixed(6)+', '+c.longitude.toFixed(6)+(acc?' (±'+Math.round(c.accuracy)+' m)':'');
+function parseLL(t){const m=String(t||'').match(/(-?\d+(?:[.,]\d+)?)\s*[,;\s]\s*(-?\d+(?:[.,]\d+)?)/);if(!m)return null;
+ const a=parseFloat(m[1].replace(',','.')),b=parseFloat(m[2].replace(',','.'));return Math.abs(a)<=90&&Math.abs(b)<=180?{lat:a,lon:b}:null}
 
-/* ---------- GPS & alamat asli ---------- */
+/* ---------- GPS, alamat, ketinggian, kompas ---------- */
 function getPos(){return new Promise(res=>{
  if(!navigator.geolocation)return res(lastPos);
  navigator.geolocation.getCurrentPosition(p=>{lastPos={latitude:p.coords.latitude,longitude:p.coords.longitude,accuracy:p.coords.accuracy,altitude:p.coords.altitude};res(lastPos)},
@@ -156,34 +189,8 @@ async function addrFor(c){
  if(lastAddr&&dist(c,lastAddr.c)<30)return lastAddr.t;
  const ac=new AbortController(),t=setTimeout(()=>ac.abort(),7000);
  try{const r=await fetch('https://nominatim.openstreetmap.org/reverse?format=jsonv2&zoom=18&accept-language=id&lat='+c.latitude+'&lon='+c.longitude,{signal:ac.signal});
-  const j=await r.json();const a=j.display_name||'';if(a)lastAddr={c:{latitude:c.latitude,longitude:c.longitude},t:a};return a}
+  const j=await r.json(),a=j.display_name||'';if(a)lastAddr={c:{latitude:c.latitude,longitude:c.longitude},t:a};return a}
  catch(e){return ''}finally{clearTimeout(t)}}
-const koorTxt=(c,acc)=>c.latitude.toFixed(6)+', '+c.longitude.toFixed(6)+(acc?' (±'+Math.round(c.accuracy)+' m)':'');
-async function realData(){
- const c=await getPos();
- if(!c)return {koor:'GPS tidak tersedia',alamat:''};
- const a=await addrFor(c);
- let alt=c.altitude!=null?c.altitude:null;if(alt==null&&$('tKet').checked)alt=await elevFor({lat:c.latitude,lon:c.longitude});
- return {koor:koorTxt(c,1),alamat:a||'(alamat tidak tersedia, periksa internet)',c,alt};
-}
-async function cekGps(){
- $('gpsSt').textContent='GPS: mencari lokasi…';
- const d=await realData();
- $('gpsSt').textContent='GPS: '+d.koor+(d.alamat?'\nAlamat: '+d.alamat:'');
- $('gpsSt').style.whiteSpace='pre-wrap';preview();
-}
-async function isiDariGps(){
- toast('Mencari lokasi… arahkan HP ke objek');const hp=readHeading(600),c=await getPos();
- if(!c){toast('GPS tidak tersedia. Izinkan lokasi.');return}
- const hd=await hp;if(hd!=null)$('arah').value=fArah(hd);
- $('koor').value=koorTxt(c,0);const a=await addrFor(c);
- if(a)$('alamat').value=a;else toast('Alamat butuh internet; isi manual.');
- if(c.altitude!=null)$('ket').value=Math.round(c.altitude);else{const e=await elevFor({lat:c.latitude,lon:c.longitude});if(e!=null)$('ket').value=Math.round(e)}
- save();preview();
-}
-
-
-/* ---------- ketinggian & arah ---------- */
 let elevC={k:'',v:null};
 async function elevFor(ll){
  const k=ll.lat.toFixed(4)+','+ll.lon.toFixed(4);if(elevC.k===k)return elevC.v;
@@ -202,63 +209,101 @@ function readHeading(ms){return new Promise(res=>{
 const DIR=['Utara','Timur Laut','Timur','Tenggara','Selatan','Barat Daya','Barat','Barat Laut'];
 const fArah=v=>typeof v==='number'?(Math.round(v)%360)+'° '+DIR[Math.round(v/45)%8]:String(v);
 const fAlt=v=>typeof v==='number'?Math.round(v)+' mdpl':(/^-?\d+([.,]\d+)?$/.test(String(v))?v+' mdpl':String(v));
-let pendH=null;
 
-/* ---------- baris watermark ---------- */
+/* sensor langsung (hanya saat kamera tampil) */
+function onPos(p){lastPos={latitude:p.coords.latitude,longitude:p.coords.longitude,accuracy:p.coords.accuracy,altitude:p.coords.altitude};liveFetch();dirty()}
+function onOri(e){const n=Date.now();if(n-oriT<200||e.alpha==null)return;oriT=n;const h=compass(e.alpha,e.beta,e.gamma);if(h==null)return;
+ if(curHeading==null)curHeading=h;else{let d=((h-curHeading+540)%360)-180;curHeading=(curHeading+d*0.35+360)%360}}
+async function liveFetch(){
+ if(!lastPos||addrBusy)return;
+ const c=lastPos,needA=!(lastAddr&&dist(c,lastAddr.c)<30)&&Date.now()-lastAddrTry>15000,needE=c.altitude==null&&$('tKet').checked&&elevC.k!==c.latitude.toFixed(4)+','+c.longitude.toFixed(4);
+ if(!needA&&!needE)return;addrBusy=true;
+ try{if(needA){lastAddrTry=Date.now();await addrFor(c)}if(needE)await elevFor({lat:c.latitude,lon:c.longitude})}finally{addrBusy=false;dirty()}}
+function syncSensors(){
+ if(gpsId!=null){navigator.geolocation.clearWatch(gpsId);gpsId=null}
+ window.removeEventListener('deviceorientationabsolute',onOri,true);
+ if(!camOn)return;
+ if(mode==='normal'&&navigator.geolocation)gpsId=navigator.geolocation.watchPosition(onPos,()=>{},{enableHighAccuracy:true,maximumAge:3000,timeout:20000});
+ if('ondeviceorientationabsolute' in window&&$('tArah').checked)window.addEventListener('deviceorientationabsolute',onOri,true);
+}
+
+/* ---------- isi baris watermark ---------- */
 function fileTime(f,strict){const lm=f&&f.lastModified;if(lm&&(!strict||Math.abs(Date.now()-lm)<600000))return new Date(lm);return new Date()}
-function parseLL(t){const m=String(t||'').match(/(-?\d+(?:[.,]\d+)?)\s*[,;\s]\s*(-?\d+(?:[.,]\d+)?)/);if(!m)return null;
- const a=parseFloat(m[1].replace(',','.')),b=parseFloat(m[2].replace(',','.'));return Math.abs(a)<=90&&Math.abs(b)<=180?{lat:a,lon:b}:null}
+function buildRows(d){
+ const r=[],j=$('judul').value.trim();
+ if($('tJudul').checked&&j)r.push({t:j,b:1});
+ if($('tAlamat').checked&&d.alamat)r.push({t:d.alamat});
+ if($('tKoor').checked&&d.koor)r.push({t:'📍 '+d.koor});
+ if($('tWaktu').checked)r.push({t:'🕒 '+fmt(d.tgl)});
+ const x2=[];
+ if($('tKet').checked&&d.alt!=null&&d.alt!=='')x2.push('Ketinggian: '+fAlt(d.alt));
+ if($('tArah').checked&&d.arah!=null&&d.arah!=='')x2.push('Arah: '+fArah(d.arah));
+ if(x2.length)r.push({t:x2.join('   •   ')});
+ return {r,ll:d.ll};
+}
+function customTgl(file){const m=$('tglMode').value;return m==='manual'&&$('tglVal').value?new Date($('tglVal').value):(m==='file'&&file?fileTime(file,0):new Date())}
+/* data langsung dari kamera */
+function rowsLive(){
+ let koor,alamat,ll=null,alt=null,arah=null;
+ if(mode==='normal'){
+  if(lastPos){ll={lat:lastPos.latitude,lon:lastPos.longitude};koor=koorTxt(lastPos,1);alamat=lastAddr?lastAddr.t:'Memuat alamat…';
+   alt=lastPos.altitude!=null?lastPos.altitude:(elevC.k===lastPos.latitude.toFixed(4)+','+lastPos.longitude.toFixed(4)?elevC.v:null)}
+  else koor='Mencari GPS…';
+  arah=curHeading;
+ }else{
+  koor=$('koor').value.trim();alamat=$('alamat').value.trim();ll=parseLL(koor);
+  alt=$('ket').value.trim()||(ll&&elevC.v!=null?elevC.v:null);arah=$('arah').value.trim()||curHeading;
+ }
+ return buildRows({alamat,koor,tgl:mode==='normal'?new Date():customTgl(null),ll,alt,arah});
+}
+/* data untuk foto dari galeri / kamera bawaan */
 function rows(file,real,pv,ex){
+ let koor,alamat,tgl,ll=null;
  if(pv)ex=mode==='normal'?{alt:'otomatis (GPS)',arah:'otomatis (kompas)'}:{alt:$('ket').value.trim()||'otomatis',arah:$('arah').value.trim()||(mode==='kamera'?'otomatis (kompas)':'')};
- const r=[],j=$('judul').value.trim();let koor,alamat,tgl,ll=null;
  if(mode==='normal'){
   const c=(real&&real.c)||lastPos;if(c)ll={lat:c.latitude,lon:c.longitude};
   koor=real?real.koor:(lastPos?koorTxt(lastPos,1):'koordinat GPS asli');
   alamat=real?real.alamat:(lastAddr?lastAddr.t:'alamat asli dari GPS');
   tgl=pv?new Date():fileTime(file,1);
- }else{
-  koor=$('koor').value.trim();alamat=$('alamat').value.trim();ll=parseLL(koor);
-  const m=$('tglMode').value;
-  tgl=m==='manual'&&$('tglVal').value?new Date($('tglVal').value):(m==='file'&&file?fileTime(file,0):new Date());
- }
- if($('tJudul').checked&&j)r.push({t:j,b:1});
- if($('tAlamat').checked&&alamat)r.push({t:alamat});
- if($('tKoor').checked&&koor)r.push({t:'📍 '+koor});
- if($('tWaktu').checked)r.push({t:'🕒 '+fmt(tgl)});
- const x2=[];
- if($('tKet').checked&&ex&&ex.alt!=null&&ex.alt!=='')x2.push('Ketinggian: '+fAlt(ex.alt));
- if($('tArah').checked&&ex&&ex.arah!=null&&ex.arah!=='')x2.push('Arah: '+fArah(ex.arah));
- if(x2.length)r.push({t:x2.join('   •   ')});
- return {r,ll};
+ }else{koor=$('koor').value.trim();alamat=$('alamat').value.trim();ll=parseLL(koor);tgl=customTgl(file)}
+ return buildRows({alamat,koor,tgl,ll,alt:ex&&ex.alt,arah:ex&&ex.arah});
 }
 let pvT;function preview(){clearTimeout(pvT);pvT=setTimeout(()=>{const r=rows(null,null,1).r;$('pr').textContent=r.length?r.map(x=>x.t).join('\n'):'(watermark kosong)'},150)}
+async function realData(){
+ const c=await getPos();
+ if(!c)return {koor:'GPS tidak tersedia',alamat:''};
+ const a=await addrFor(c);
+ let alt=c.altitude!=null?c.altitude:null;if(alt==null&&$('tKet').checked)alt=await elevFor({lat:c.latitude,lon:c.longitude});
+ return {koor:koorTxt(c,1),alamat:a||'(alamat tidak tersedia, periksa internet)',c,alt};
+}
 
-/* ---------- gambar ---------- */
+/* ---------- gambar watermark ---------- */
 function wrap(x,text,maxW){const out=[];text.split('\n').forEach(par=>{let l='';par.split(' ').forEach(w=>{const t=l?l+' '+w:w;if(x.measureText(t).width>maxW&&l){out.push(l);l=w}else l=t});out.push(l)});return out}
 const rr=(x,X,Y,W,H,r)=>{x.beginPath();x.moveTo(X+r,Y);x.arcTo(X+W,Y,X+W,Y+H,r);x.arcTo(X+W,Y+H,X,Y+H,r);x.arcTo(X,Y+H,X,Y,r);x.arcTo(X,Y,X+W,Y,r);x.closePath()};
 const TILE={osm:(z,X,Y)=>'https://tile.openstreetmap.org/'+z+'/'+X+'/'+Y+'.png',sat:(z,X,Y)=>'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/'+z+'/'+Y+'/'+X};
 const ATTR={osm:'© OpenStreetMap',sat:'Esri'};
-function loadImg(u){return new Promise(ok=>{const i=new Image();i.crossOrigin='anonymous';const t=setTimeout(()=>{i.src='';ok(null)},7000);i.onload=()=>{clearTimeout(t);ok(i)};i.onerror=()=>{clearTimeout(t);ok(null)};i.src=u})}
-let mapCache={k:'',c:null};
+const tileC=new Map(),tileF=new Map();
+function loadImg(u){
+ if(tileC.has(u))return Promise.resolve(tileC.get(u));
+ if(tileF.has(u)&&Date.now()-tileF.get(u)<30000)return Promise.resolve(null);
+ return new Promise(ok=>{const i=new Image();i.crossOrigin='anonymous';const t=setTimeout(()=>{i.src='';tileF.set(u,Date.now());ok(null)},7000);
+  i.onload=()=>{clearTimeout(t);tileC.set(u,i);if(tileC.size>16)tileC.delete(tileC.keys().next().value);ok(i)};
+  i.onerror=()=>{clearTimeout(t);tileF.set(u,Date.now());ok(null)};i.src=u})}
 async function getMap(ll,z,st){
- const k=[ll.lat.toFixed(5),ll.lon.toFixed(5),z,st].join();
- if(mapCache.k===k&&mapCache.c)return mapCache.c;
  const W=300,n=Math.pow(2,z),sn=Math.sin(ll.lat*Math.PI/180),
   px=(ll.lon+180)/360*n*256,py=(0.5-Math.log((1+sn)/(1-sn))/(4*Math.PI))*n*256,x0=px-W/2,y0=py-W/2,
   c=document.createElement('canvas');c.width=c.height=W;const g=c.getContext('2d');
  g.fillStyle='#cfd8dc';g.fillRect(0,0,W,W);
- let okN=0;const jobs=[];
+ const jobs=[];let okN=0;
  for(let tx=Math.floor(x0/256);tx<=Math.floor((x0+W)/256);tx++)for(let ty=Math.floor(y0/256);ty<=Math.floor((y0+W)/256);ty++){
   if(ty<0||ty>=n)continue;const X=((tx%n)+n)%n;
   jobs.push(loadImg(TILE[st](z,X,ty)).then(im=>{if(im){g.drawImage(im,tx*256-x0,ty*256-y0);okN++}}))}
- await Promise.all(jobs);
- if(!okN){toast('Peta gagal dimuat, periksa internet');return c}
- mapCache={k,c};return c;
+ await Promise.all(jobs);return c;
 }
 async function drawPanel(x,w,h,inf){
  const rs=inf.r,showMap=$('tMap').checked&&inf.ll;
  if(!rs.length&&!showMap)return;
- const fs=Math.max(14,Math.round(Math.min(w,h)/34*parseFloat($('ukuran').value))),m=Math.round(fs*.6),p=Math.round(fs*.6),lh=Math.round(fs*1.3),S=Math.round(fs*5.2);
+ const fs=Math.max(12,Math.round(Math.min(w,h)/34*parseFloat($('ukuran').value))),m=Math.round(fs*.6),p=Math.round(fs*.6),lh=Math.round(fs*1.3),S=Math.round(fs*5.2);
  const st=$('mapStyle').value,mp=showMap?await getMap(inf.ll,parseInt($('mapZoom').value),st):null;
  const tx=m+p+(mp?S+p:0),tw=w-m-p-tx,L=[];
  rs.forEach(r=>{x.font=(r.b?'bold ':'')+Math.round(r.b?fs*1.2:fs)+'px sans-serif';wrap(x,r.t,tw).forEach(t=>L.push({t,b:r.b}))});
@@ -277,6 +322,77 @@ async function drawPanel(x,w,h,inf){
  x.fillStyle='#fff';x.textBaseline='top';const ty=Y+p+(ih-th)/2;
  L.forEach((l,i)=>{x.font=(l.b?'bold ':'')+Math.round(l.b?fs*1.2:fs)+'px sans-serif';x.fillText(l.t,tx,ty+i*lh)});
 }
+
+/* ---------- pratinjau langsung di layar kamera ---------- */
+let dT;function dirty(){clearTimeout(dT);dT=setTimeout(drawOverlay,120)}
+async function drawOverlay(){
+ if(ovBusy||!camOn||sheet)return;ovBusy=true;
+ try{
+  const c=$('ov'),W=c.clientWidth,H=c.clientHeight;if(!W||!H)return;
+  const d=Math.min(window.devicePixelRatio||1,2),cw=Math.round(W*d),ch=Math.round(H*d);
+  if(c.width!==cw||c.height!==ch){c.width=cw;c.height=ch}
+  const x=c.getContext('2d');x.clearRect(0,0,cw,ch);await drawPanel(x,cw,ch,rowsLive());
+  $('chip').textContent=mode==='normal'?(lastPos?'GPS ±'+Math.round(lastPos.accuracy)+' m':'Mencari GPS…'):'Mode Custom';
+ }catch(e){}finally{ovBusy=false}
+}
+setInterval(()=>{if(camOn&&!sheet)drawOverlay()},1000);
+window.addEventListener('resize',()=>{dirty()});
+
+/* ---------- kamera ---------- */
+async function startCam(){
+ if(stream||starting||sheet==='set'||busy)return;starting=true;
+ try{
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia)throw new Error('tidak didukung');
+  stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:facing},width:{ideal:1920},height:{ideal:1080}},audio:false});
+  $('vid').srcObject=stream;try{await $('vid').play()}catch(e){}
+  camOn=true;note('');syncSensors();drawOverlay();
+ }catch(e){camOn=false;stream=null;note('Kamera tidak bisa dibuka ('+(e.name||e.message)+'). Izinkan akses kamera untuk aplikasi ini, atau aktifkan "kamera bawaan HP" di Pengaturan.')}
+ finally{starting=false}
+}
+function stopCam(){camOn=false;if(stream){stream.getTracks().forEach(t=>t.stop());stream=null}$('vid').srcObject=null;syncSensors()}
+document.addEventListener('visibilitychange',()=>{if(document.hidden)stopCam();else if(sheet!=='set')startCam()});
+
+/* ---------- hasil & simpan ---------- */
+const b64=blob=>new Promise((ok,no)=>{const r=new FileReader();r.onload=()=>ok(String(r.result).split(',')[1]);r.onerror=no;r.readAsDataURL(blob)});
+async function saveBlob(blob){
+ const name='GEO_'+localISO(new Date()).replace(/[-:T]/g,'')+'_'+Math.floor(Math.random()*900+100)+'.jpg';
+ if(native&&GS){const r=await GS.savePhoto({data:await b64(blob),fileName:name});return 'DCIM/Kamera Geotag/'+name}
+ const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),4000);return 'diunduh: '+name;
+}
+async function doSave(){
+ if(!lastBlob||lastSaved)return;
+ $('rst').textContent='Menyimpan ke galeri…';
+ try{const w=await saveBlob(lastBlob);lastSaved=true;$('btnSimpan').disabled=true;$('rst').textContent='✓ Tersimpan di galeri ('+w+')'}
+ catch(e){const m=(e&&e.message)||String(e);$('rst').textContent='✗ Gagal menyimpan: '+m;showErr('Gagal simpan ke galeri: '+m)}
+}
+function show(blob,msg){
+ if(lastUrl)URL.revokeObjectURL(lastUrl);lastBlob=blob;lastUrl=URL.createObjectURL(blob);lastSaved=false;
+ $('hasil').src=lastUrl;$('rst').textContent=msg||'';$('btnSimpan').disabled=false;openSheet('res');
+}
+
+/* ---------- ambil foto dari kamera langsung ---------- */
+async function shoot(){
+ if(busy||!camOn)return;const v=$('vid');
+ if(!v.videoWidth){toast('Kamera belum siap');return}
+ busy=true;$('shut').disabled=true;
+ try{
+  const vw=v.videoWidth,vh=v.videoHeight,A=$('view').clientWidth/$('view').clientHeight;
+  let sw=vw,sh=vh;if(vw/vh>A)sw=vh*A;else sh=vw/A;
+  const k=Math.min(1,MAXSIDE/Math.max(sw,sh)),w=Math.round(sw*k),h=Math.round(sh*k);
+  const c=document.createElement('canvas');c.width=w;c.height=h;const x=c.getContext('2d');
+  x.drawImage(v,(vw-sw)/2,(vh-sh)/2,sw,sh,0,0,w,h);
+  if(navigator.vibrate)navigator.vibrate(25);
+  if(mode==='normal'&&lastPos&&!lastAddr&&$('tAlamat').checked){const a=await addrFor(lastPos);if(a&&!lastAddr)lastAddr={c:lastPos,t:a}}
+  await drawPanel(x,w,h,rowsLive());
+  const blob=await new Promise(r=>c.toBlob(r,'image/jpeg',0.9));c.width=c.height=0;
+  if(!blob)throw new Error('gagal membuat gambar');
+  show(blob,$('auto').checked?'Menyimpan ke galeri…':'');
+  if($('auto').checked)await doSave();
+ }catch(e){showErr('Gagal ambil foto: '+((e&&e.message)||e))}
+ finally{busy=false;$('shut').disabled=false}
+}
+
+/* ---------- foto dari galeri / kamera bawaan ---------- */
 async function loadBmp(f){
  try{return await createImageBitmap(f,{imageOrientation:'from-image'})}catch(e){}
  return new Promise((ok,no)=>{const i=new Image(),u=URL.createObjectURL(f);i.onload=()=>{URL.revokeObjectURL(u);ok(i)};i.onerror=no;i.src=u})}
@@ -288,77 +404,87 @@ async function makePhoto(f,real,ex){
  const blob=await new Promise(r=>c.toBlob(r,'image/jpeg',0.9));c.width=c.height=0;
  if(!blob)throw new Error('gagal membuat gambar');return blob;
 }
-
-/* ---------- simpan ---------- */
-const b64=blob=>new Promise((ok,no)=>{const r=new FileReader();r.onload=()=>ok(String(r.result).split(',')[1]);r.onerror=no;r.readAsDataURL(blob)});
-async function saveBlob(blob){
- const name='GEO_'+localISO(new Date()).replace(/[-:T]/g,'')+'_'+Math.floor(Math.random()*900+100)+'.jpg';
- if(GS){await GS.savePhoto({data:await b64(blob),fileName:name});return}
- const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),4000);
-}
-function show(blob){
- if(lastUrl)URL.revokeObjectURL(lastUrl);lastBlob=blob;lastUrl=URL.createObjectURL(blob);lastSaved=false;
- $('hasil').src=lastUrl;$('hasil').style.display='block';$('kosong').style.display='none';
- $('btnSimpan').disabled=false;$('btnBagi').disabled=!(navigator.canShare);
-}
-
-/* ---------- alur utama ---------- */
-function setBusy(b,t){busy=b;$('go').disabled=b;$('st').textContent=t||''}
-async function handle(files){
+async function handle(files,asMode){
  if(!files.length||busy)return;
- setBusy(true,'Menyiapkan…');
- let real=null;
- if(mode==='normal'){real=await Promise.race([pending||realData(),sleep(15000).then(()=>null)])||{koor:'GPS tidak tersedia',alamat:''}}
- let ex={alt:null,arah:null};
- if(mode==='normal'){ex.alt=real.alt;ex.arah=pendH}
- else{const ll=parseLL($('koor').value);
-  ex.alt=$('ket').value.trim()||($('tKet').checked&&ll?await elevFor(ll):null);
-  ex.arah=$('arah').value.trim()||(mode==='kamera'?pendH:null)}
- let ok=0,gagal='';
- for(let i=0;i<files.length;i++){
-  setBusy(true,'Memproses '+(i+1)+'/'+files.length+'…');await sleep(30);
-  try{const bl=await makePhoto(files[i],real,ex);show(bl);
-   if($('auto').checked){await saveBlob(bl);lastSaved=true}ok++}
-  catch(e){gagal=(e&&e.message)||String(e)}
- }
- setBusy(false,ok?(ok+' foto selesai'+($('auto').checked?(GS?' & tersimpan di galeri (Pictures/Kamera Geotag)':' & diunduh'):'')+'.'):'');
- toast(gagal?('Gagal: '+gagal):(ok+' foto selesai'));
+ busy=true;const prev=mode;if(asMode)mode=asMode;
+ try{
+  note('Menyiapkan…');
+  let real=null,ex={alt:null,arah:null};
+  if(mode==='normal'){real=await Promise.race([pending||realData(),sleep(15000).then(()=>null)])||{koor:'GPS tidak tersedia',alamat:''};ex.alt=real.alt;ex.arah=pendH}
+  else{const ll=parseLL($('koor').value);ex.alt=$('ket').value.trim()||($('tKet').checked&&ll?await elevFor(ll):null);ex.arah=$('arah').value.trim()||(mode==='kamera'?pendH:null)}
+  let ok=0,gagal='',last=null;
+  for(let i=0;i<files.length;i++){
+   note('Memproses '+(i+1)+'/'+files.length+'…');await sleep(30);
+   try{const bl=await makePhoto(files[i],real,ex);last=bl;
+    if($('auto').checked&&i<files.length-1){await saveBlob(bl)}
+    ok++}
+   catch(e){gagal=(e&&e.message)||String(e)}
+  }
+  note('');
+  if(last){show(last,$('auto').checked?'Menyimpan ke galeri…':(ok+' foto selesai'));if($('auto').checked){await doSave();if(ok>1)$('rst').textContent+=' · total '+ok+' foto'}}
+  if(gagal)showErr('Gagal: '+gagal);
+ }catch(e){note('');showErr('Gagal: '+((e&&e.message)||e))}
+ finally{mode=prev;busy=false}
 }
-$('go').onclick=async()=>{
- if(busy)return;
- if(mode==='galeri'){$('fGal').click();return}
- if(mode==='normal')pending=realData();
- pendH=null;
- if($('tArah').checked&&(mode==='normal'||!$('arah').value.trim())){
-  $('go').disabled=true;$('st').textContent='Membaca arah kompas…';pendH=await readHeading(500);$('go').disabled=false;$('st').textContent='';
- }
- $('fCam').click();
-};
-['fCam','fGal'].forEach(id=>$(id).onchange=e=>{const f=[...e.target.files];e.target.value='';handle(f)});
-$('btnSimpan').onclick=async()=>{
- if(!lastBlob)return;if(lastSaved){toast('Sudah tersimpan');return}
- try{await saveBlob(lastBlob);lastSaved=true;toast(GS?'Tersimpan di galeri':'Diunduh')}catch(e){toast('Gagal menyimpan: '+(e.message||e))}
-};
-$('btnBagi').onclick=async()=>{try{const f=new File([lastBlob],'geotag.jpg',{type:'image/jpeg'});if(navigator.canShare({files:[f]}))await navigator.share({files:[f]})}catch(e){}};
-$('btnArah').onclick=async()=>{toast('Arahkan HP ke objek…');const h=await readHeading(600);if(h==null)toast('Kompas tidak tersedia, isi arah manual');else{$('arah').value=fArah(h);save();preview()}};
-$('btnGps').onclick=cekGps;$('btnIsi').onclick=isiDariGps;
+['fCam','fGal'].forEach(id=>$(id).onchange=e=>{const f=[...e.target.files];e.target.value='';handle(f,id==='fGal'?'galeri':null).then(()=>{})});
 
-/* ---------- mode & tampilan ---------- */
-const INFO={normal:'Foto langsung dari kamera dengan peta, koordinat GPS, alamat, dan waktu asli. Butuh GPS aktif; peta dan alamat butuh internet.',
- kamera:'Foto langsung dari kamera. Koordinat, alamat, dan tanggal diisi sendiri.',
- galeri:'Pilih satu atau banyak foto dari galeri, lalu beri watermark dengan koordinat, alamat, dan tanggal sendiri.'};
+/* ---------- layar & tombol ---------- */
+function openSheet(n){
+ sheet=n;$(n).style.display='block';try{history.pushState({s:n},'')}catch(e){}
+ if(n==='set')stopCam();
+}
+function closeSheet(fromPop){
+ if(!sheet)return;const n=sheet;$(n).style.display='none';sheet='';
+ if(!fromPop){try{history.back()}catch(e){}}
+ if(n==='set'){save();dirty()}
+ startCam();
+}
+window.addEventListener('popstate',()=>{if(sheet)closeSheet(true)});
+$('btnSet').onclick=()=>{preview();openSheet('set')};
+$('setBack').onclick=()=>closeSheet();
+$('resBack').onclick=()=>closeSheet();
+$('btnAgain').onclick=()=>closeSheet();
+$('btnSimpan').onclick=doSave;
+$('shut').onclick=()=>{
+ if(busy)return;
+ if($('sysCam').checked){
+  if(mode==='normal')pending=realData();
+  pendH=curHeading;stopCam();setTimeout(()=>$('fCam').click(),150);return;
+ }
+ shoot();
+};
+$('btnGal').onclick=()=>{if(busy)return;stopCam();setTimeout(()=>$('fGal').click(),150)};
+$('btnFlip').onclick=()=>{facing=facing==='environment'?'user':'environment';stopCam();startCam()};
+
+async function cekGps(){
+ $('gpsSt').textContent='GPS: mencari lokasi…';
+ const d=await realData();
+ $('gpsSt').textContent='GPS: '+d.koor+(d.alamat?'\nAlamat: '+d.alamat:'');$('gpsSt').style.whiteSpace='pre-wrap';
+}
+async function isiDariGps(){
+ toast('Mencari lokasi… arahkan HP ke objek');const hp=readHeading(600),c=await getPos();
+ if(!c){toast('GPS tidak tersedia. Izinkan lokasi.');return}
+ const hd=await hp;if(hd!=null)$('arah').value=fArah(hd);
+ $('koor').value=koorTxt(c,0);const a=await addrFor(c);
+ if(a)$('alamat').value=a;else toast('Alamat butuh internet; isi manual.');
+ if(c.altitude!=null)$('ket').value=Math.round(c.altitude);else{const e=await elevFor({lat:c.latitude,lon:c.longitude});if(e!=null)$('ket').value=Math.round(e)}
+ save();preview();
+}
+$('btnGps').onclick=cekGps;$('btnIsi').onclick=isiDariGps;
+$('btnArah').onclick=async()=>{toast('Arahkan HP ke objek…');const h=await readHeading(600);if(h==null)toast('Kompas tidak tersedia, isi arah manual');else{$('arah').value=fArah(h);save();preview()}};
+
+/* ---------- mode ---------- */
+const INFO={normal:'Mode Normal: koordinat GPS, alamat, ketinggian, arah, dan waktu asli saat foto. Butuh GPS aktif; peta dan alamat butuh internet.',
+ kamera:'Mode Custom: koordinat, alamat, ketinggian, dan tanggal diisi sendiri di bagian Data custom.'};
 function setMode(m){
  mode=m;document.querySelectorAll('#seg button').forEach(b=>b.classList.toggle('on',b.dataset.m===m));
- $('info').textContent=INFO[m];
- $('boxNormal').classList.toggle('h',m!=='normal');$('boxCustom').classList.toggle('h',m==='normal');
- $('go').textContent=m==='galeri'?'🖼️ Pilih dari Galeri':'📷 Ambil Foto';
- save();preview();
+ $('info').textContent=INFO[m];save();preview();syncSensors();dirty();
 }
 document.querySelectorAll('#seg button').forEach(b=>b.onclick=()=>setMode(b.dataset.m));
 $('tglMode').addEventListener('change',()=>{const m=$('tglMode').value==='manual';$('tglVal').classList.toggle('h',!m);if(m&&!$('tglVal').value)$('tglVal').value=localISO(new Date())});
-document.querySelectorAll('input,select,textarea').forEach(e=>e.addEventListener('input',()=>{save();preview()}));
+document.querySelectorAll('#set input,#set select,#set textarea').forEach(e=>e.addEventListener('input',()=>{save();preview();if(e.id==='tArah')syncSensors()}));
 try{load()}catch(e){}
-$('tglMode').dispatchEvent(new Event('change'));setMode(mode);
+$('tglMode').dispatchEvent(new Event('change'));setMode(mode);startCam();
 </script>
 </body>
 </html>
