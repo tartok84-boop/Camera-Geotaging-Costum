@@ -35,6 +35,8 @@ button:disabled{opacity:.5}
 .bar button{width:100%;max-width:1076px;display:block;margin:0 auto;font-size:17px;padding:14px}
 #toast{position:fixed;left:12px;right:12px;bottom:calc(90px + env(safe-area-inset-bottom));background:#222;color:#fff;border-radius:10px;padding:10px 12px;text-align:center;display:none;z-index:9}
 .h{display:none}
+button,select,input{touch-action:manipulation}
+#err{position:fixed;top:0;left:0;right:0;z-index:99;background:#b00020;color:#fff;font-size:12px;padding:6px 10px;white-space:pre-wrap;display:none}
 </style>
 </head>
 <body>
@@ -115,15 +117,21 @@ button:disabled{opacity:.5}
 
 <div class="bar"><button id="go">📷 Ambil Foto</button></div>
 <div id="toast"></div>
+<div id="err"></div>
 <input type="file" id="fCam" accept="image/*" capture="environment" hidden>
 <input type="file" id="fGal" accept="image/*" multiple hidden>
 
+<script>
+function showErr(m){var b=document.getElementById('err');if(b){b.style.display='block';b.textContent=m}}
+window.addEventListener('error',function(e){showErr('Error: '+e.message+' (baris '+e.lineno+')')});
+window.addEventListener('unhandledrejection',function(e){showErr('Error: '+(e.reason&&e.reason.message||e.reason))});
+</script>
 <script>
 const $=id=>document.getElementById(id);
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const MAXSIDE=2560;
 const native=!!(window.Capacitor&&Capacitor.isNativePlatform&&Capacitor.isNativePlatform());
-const GS=native?Capacitor.registerPlugin('GallerySaver'):null;
+let GS=null;try{if(native)GS=Capacitor.registerPlugin('GallerySaver')}catch(e){}
 let mode='normal',pending=null,lastPos=null,lastAddr=null,lastBlob=null,lastSaved=true,lastUrl=null,busy=false;
 
 /* ---------- pengaturan ---------- */
@@ -349,7 +357,8 @@ function setMode(m){
 document.querySelectorAll('#seg button').forEach(b=>b.onclick=()=>setMode(b.dataset.m));
 $('tglMode').addEventListener('change',()=>{const m=$('tglMode').value==='manual';$('tglVal').classList.toggle('h',!m);if(m&&!$('tglVal').value)$('tglVal').value=localISO(new Date())});
 document.querySelectorAll('input,select,textarea').forEach(e=>e.addEventListener('input',()=>{save();preview()}));
-load();$('tglMode').dispatchEvent(new Event('change'));setMode(mode);
+try{load()}catch(e){}
+$('tglMode').dispatchEvent(new Event('change'));setMode(mode);
 </script>
 </body>
 </html>
