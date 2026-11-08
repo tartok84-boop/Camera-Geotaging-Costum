@@ -15,6 +15,10 @@ button,select,input{touch-action:manipulation}
 #frame{position:absolute;left:50%;top:50%;width:100%;height:100%;transform:translate(-50%,-50%);overflow:hidden;background:#000}
 #vid{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 #ov{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+#flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none;transition:opacity .12s}
+#thumbBtn{position:absolute;top:44px;left:8px;width:60px;height:60px;border:2px solid #fff;border-radius:10px;padding:0;background:#000;overflow:hidden;display:none}
+#thumb{width:100%;height:100%;display:block}
+#badge{position:absolute;right:2px;bottom:2px;font-size:12px;background:#000c;color:#fff;border-radius:8px;padding:0 5px;line-height:18px}
 #chip{position:absolute;top:8px;left:8px;background:#0008;color:#fff;font-size:12px;padding:4px 10px;border-radius:14px}
 #btnSet{position:absolute;top:6px;right:8px}
 #msg{position:absolute;left:12px;right:12px;top:42%;text-align:center;color:#fff;background:#000a;border-radius:10px;padding:10px;font-size:14px;display:none}
@@ -54,8 +58,9 @@ textarea{min-height:64px;resize:vertical}
 <body>
 <div id="stage">
   <div id="view">
-    <div id="frame"><video id="vid" playsinline autoplay muted></video><canvas id="ov"></canvas></div>
+    <div id="frame"><video id="vid" playsinline autoplay muted></video><canvas id="ov"></canvas><div id="flash"></div></div>
     <div id="chip"></div>
+    <button id="thumbBtn" aria-label="Foto terakhir"><canvas id="thumb" width="96" height="96"></canvas><span id="badge">⏳</span></button>
     <button class="ib" id="btnSet" aria-label="Pengaturan"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
     <div id="msg"></div>
   </div>
@@ -160,10 +165,11 @@ const $=id=>document.getElementById(id);
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const MAXSIDE=4096;
 const native=!!(window.Capacitor&&Capacitor.isNativePlatform&&Capacitor.isNativePlatform());
-let GS=null;try{if(native)GS=Capacitor.registerPlugin('GallerySaver')}catch(e){}
+function getGS(){try{const C=window.Capacitor;if(!C)return null;if(C.Plugins&&C.Plugins.GallerySaver)return C.Plugins.GallerySaver;if(C.registerPlugin)return C.registerPlugin('GallerySaver')}catch(e){}return null}
+const GS=native?getGS():null;
 let mode='normal',facing='environment',stream=null,starting=false,camOn=false,busy=false;
 let lastPos=null,lastAddr=null,lastAddrTry=0,addrBusy=false,curHeading=null,gpsId=null,oriT=0;
-let lastOrig=null,origSaved=true,lastBase='',rotTry=0,needRestart=false,lastBlob=null,lastSaved=true,lastUrl=null,pending=null,pendH=null,ovBusy=false,sheet='';
+let thumbJob=null,pendingN=0,lastOrig=null,origSaved=true,lastBase='',rotTry=0,needRestart=false,lastBlob=null,lastSaved=true,lastUrl=null,pending=null,pendH=null,ovBusy=false,sheet='';
 
 /* ---------- pengaturan ---------- */
 const KEYS=['judul','koor','alamat','ket','arah','tJudul','tKoor','tAlamat','tWaktu','tKet','tArah','tMap','mapStyle','mapZoom','posisi','ukuran','saveOrig','sysCam','tglMode'];
@@ -368,8 +374,11 @@ document.addEventListener('visibilitychange',()=>{if(document.hidden)stopCam();e
 const b64=blob=>new Promise((ok,no)=>{const r=new FileReader();r.onload=()=>ok(String(r.result).split(',')[1]);r.onerror=no;r.readAsDataURL(blob)});
 const tmo=(p,ms)=>Promise.race([p,new Promise((_,no)=>setTimeout(()=>no(new Error('penyimpanan tidak merespons')),ms))]);
 const newBase=()=>'GEO_'+localISO(new Date()).replace(/[-:T]/g,'')+'_'+Math.floor(Math.random()*900+100);
-async function saveBlob(blob,name){
- if(native&&GS){
+let saveQ=Promise.resolve();
+const queue=fn=>{const p=saveQ.then(fn);saveQ=p.catch(()=>{});return p};
+async function saveRaw(blob,name){
+ if(native){
+  if(!GS)throw new Error('plugin penyimpanan tidak ditemukan di aplikasi (pastikan folder android ter-upload lengkap, lalu build ulang)');
   try{const d=await b64(blob),CH=1500000;let res=null;
    for(let i=0;i<d.length;i+=CH)res=await tmo(GS.savePhoto({data:d.slice(i,i+CH),fileName:name,first:i===0,last:i+CH>=d.length}),60000);
    return (res&&res.uri)||''}
@@ -377,25 +386,40 @@ async function saveBlob(blob,name){
  }
  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),4000);return '';
 }
+const saveBlob=(blob,name)=>queue(()=>saveRaw(blob,name));
 let cur=null;
 const enc=(c,q)=>new Promise(r=>c.toBlob(r,'image/jpeg',q||0.9));
-const mkJob=(blob,orig,prep)=>({base:newBase(),blob,orig:orig||null,prep:prep||null,saved:false,origSaved:!orig,uri:'',running:false,note:''});
-function setStatus(job,t,k){if(cur!==job)return;const e=$('rst');e.textContent=t;e.style.color=k==='bad'?'#ff8a80':(k==='ok'?'#7cfc9a':'#ddd')}
+const mkJob=(blob,orig,prep)=>({base:newBase(),blob,orig:orig||null,prep:prep||null,saved:false,origSaved:!orig,uri:'',running:false,note:'',live:false,done:false,msg:'',k:''});
+function refresh(job){
+ const e=$('rst');e.textContent=job.msg||'';e.style.color=job.k==='bad'?'#ff8a80':(job.k==='ok'?'#7cfc9a':'#ddd');
+ $('btnSimpan').style.display=job.k==='bad'?'block':'none';
+ $('btnLihat').style.display=(job.k==='ok'&&native&&GS&&job.uri)?'block':'none';
+}
+function setStatus(job,t,k){
+ job.msg=t;job.k=k||'';
+ if(thumbJob===job)$('badge').textContent=k==='ok'?'✓':(k==='bad'?'✗':'⏳');
+ if(cur===job)refresh(job);
+}
 async function persist(job){
  if(job.running)return;job.running=true;
- if(cur===job){$('btnSimpan').style.display='none';$('btnLihat').style.display='none'}
  setStatus(job,'Menyimpan ke galeri…');
  try{
   if(job.prep)await job.prep;
   if(!job.blob)throw new Error('gagal membuat gambar');
   if(!job.saved){job.uri=await saveBlob(job.blob,job.base+'.jpg');job.saved=true}
   if(job.orig&&!job.origSaved){await saveBlob(job.orig,job.base+'_asli.jpg');job.origSaved=true}
-  setStatus(job,'✓ Tersimpan di galeri\nAlbum: DCIM/Kamera Geotag\n'+job.base+'.jpg'+(job.orig?'  +  _asli':'')+job.note,'ok');
-  if(cur===job){toast('✓ Foto tersimpan di galeri');if(native&&GS&&job.uri)$('btnLihat').style.display='block'}
- }catch(e){const m=(e&&e.message)||String(e);setStatus(job,'✗ Gagal menyimpan: '+m,'bad');if(cur===job)$('btnSimpan').style.display='block';showErr('Gagal simpan ke galeri: '+m)}
- finally{job.running=false}
+  setStatus(job,native?'✓ Tersimpan di galeri\nAlbum: DCIM/Kamera Geotag\n'+job.base+'.jpg'+(job.orig?'  +  _asli':'')+job.note:'✓ File diunduh (versi browser)','ok');
+  toast(native?'✓ Foto tersimpan':'✓ File diunduh');
+ }catch(e){const m=(e&&e.message)||String(e);setStatus(job,'✗ Gagal menyimpan: '+m,'bad');toast('✗ Gagal menyimpan foto');showErr('Gagal simpan ke galeri: '+m)}
+ finally{job.running=false;if(job.live&&!job.done){job.done=true;pendingN--}}
 }
-function openResult(job){cur=job;$('rst').textContent='';$('btnSimpan').style.display='none';$('btnLihat').style.display='none';if(sheet!=='res')openSheet('res')}
+function openResult(job){cur=job;refresh(job);if(sheet!=='res')openSheet('res')}
+function setThumb(job,c){
+ const t=$('thumb'),x=t.getContext('2d'),m=Math.min(c.width,c.height);
+ x.drawImage(c,(c.width-m)/2,(c.height-m)/2,m,m,0,0,t.width,t.height);
+ thumbJob=job;$('badge').textContent='⏳';$('thumbBtn').style.display='block';
+}
+$('thumbBtn').onclick=()=>{const j=thumbJob;if(!j)return;if(j.blob)showBlobPreview(j,j.blob);else toast('Masih memproses…')};
 function showCanvasPreview(job,c){
  const pc=$('hasilC'),k=Math.min(1,1280/Math.max(c.width,c.height));pc.width=Math.round(c.width*k);pc.height=Math.round(c.height*k);
  pc.getContext('2d').drawImage(c,0,0,pc.width,pc.height);pc.style.display='block';$('hasil').style.display='none';openResult(job);
@@ -409,8 +433,10 @@ function showBlobPreview(job,blob){
 async function shoot(){
  if(busy||!camOn)return;const v=$('vid');
  if(!v.videoWidth){toast('Kamera belum siap');return}
+ if(pendingN>=3){toast('Masih menyimpan foto sebelumnya…');return}
  busy=true;
  try{
+  const fl=$('flash');fl.style.opacity='.8';setTimeout(()=>fl.style.opacity='0',90);
   layoutFrame();const vw=v.videoWidth,vh=v.videoHeight,A=$('frame').clientWidth/$('frame').clientHeight;
   let sw=vw,sh=vh;if(vw/vh>A)sw=vh*A;else sh=vw/A;
   const k=Math.min(1,MAXSIDE/Math.max(sw,sh)),w=Math.round(sw*k),h=Math.round(sh*k);
@@ -419,9 +445,9 @@ async function shoot(){
   let c0=null;if($('saveOrig').checked){c0=document.createElement('canvas');c0.width=w;c0.height=h;c0.getContext('2d').drawImage(c,0,0)}
   if(navigator.vibrate)navigator.vibrate(20);
   await drawPanel(x,w,h,rowsLive(),true);
-  const job=mkJob(null,c0?{}:null,null);
+  const job=mkJob(null,c0?{}:null,null);job.live=true;pendingN++;
   job.prep=(async()=>{job.blob=await enc(c,0.9);c.width=c.height=0;if(c0){job.orig=await enc(c0,0.92);c0.width=c0.height=0}})();
-  showCanvasPreview(job,c);
+  setThumb(job,c);
   persist(job);
  }catch(e){showErr('Gagal ambil foto: '+((e&&e.message)||e))}
  finally{busy=false}
