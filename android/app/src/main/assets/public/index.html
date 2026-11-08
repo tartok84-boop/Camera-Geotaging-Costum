@@ -12,6 +12,7 @@ html,body{height:100%;margin:0;overflow:hidden;background:#000;color:var(--tx);f
 button,select,input{touch-action:manipulation}
 #stage{position:fixed;inset:0;display:flex;flex-direction:column;background:#000;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
 #view{position:relative;flex:1;min-height:0;min-width:0;background:#111;overflow:hidden}
+#frame{position:absolute;left:50%;top:50%;width:100%;height:100%;transform:translate(-50%,-50%);overflow:hidden;background:#000}
 #vid{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 #ov{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
 #chip{position:absolute;top:8px;left:8px;background:#0008;color:#fff;font-size:12px;padding:4px 10px;border-radius:14px}
@@ -53,8 +54,7 @@ textarea{min-height:64px;resize:vertical}
 <body>
 <div id="stage">
   <div id="view">
-    <video id="vid" playsinline autoplay muted></video>
-    <canvas id="ov"></canvas>
+    <div id="frame"><video id="vid" playsinline autoplay muted></video><canvas id="ov"></canvas></div>
     <div id="chip"></div>
     <button class="ib" id="btnSet" aria-label="Pengaturan"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
     <div id="msg"></div>
@@ -125,7 +125,8 @@ textarea{min-height:64px;resize:vertical}
 
     <div class="c">
       <b>Penyimpanan &amp; kamera</b>
-      <div class="k"><input type="checkbox" id="auto" checked><span>Simpan otomatis ke galeri (DCIM/Kamera Geotag)</span></div>
+      <div class="i">Foto otomatis tersimpan di galeri (album DCIM/Kamera Geotag). Rasio foto 4:3 (landscape) atau 3:4 (portrait).</div>
+      <div class="k"><input type="checkbox" id="saveOrig" checked><span>Simpan juga foto asli tanpa watermark (nama berakhiran _asli)</span></div>
       <div class="k"><input type="checkbox" id="sysCam"><span>Pakai kamera bawaan HP (resolusi penuh, tanpa preview langsung)</span></div>
     </div>
   </div>
@@ -137,7 +138,7 @@ textarea{min-height:64px;resize:vertical}
     <div style="padding:8px 0"><img id="hasil" alt="Hasil"></div>
     <div class="i" id="rst" style="color:#ccc;text-align:center"></div>
     <div class="r" style="margin-top:8px">
-      <button class="bt s" id="btnSimpan" disabled>💾 Simpan ke galeri</button>
+      <button class="bt s" id="btnSimpan" style="display:none">↻ Coba simpan lagi</button>
       <button class="bt" id="btnAgain">📷 Foto lagi</button>
     </div>
   </div>
@@ -156,15 +157,15 @@ window.addEventListener('unhandledrejection',function(e){showErr('Error: '+(e.re
 <script>
 const $=id=>document.getElementById(id);
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
-const MAXSIDE=2560;
+const MAXSIDE=4096;
 const native=!!(window.Capacitor&&Capacitor.isNativePlatform&&Capacitor.isNativePlatform());
 let GS=null;try{if(native)GS=Capacitor.registerPlugin('GallerySaver')}catch(e){}
 let mode='normal',facing='environment',stream=null,starting=false,camOn=false,busy=false;
 let lastPos=null,lastAddr=null,lastAddrTry=0,addrBusy=false,curHeading=null,gpsId=null,oriT=0;
-let rotTry=0,needRestart=false,lastBlob=null,lastSaved=true,lastUrl=null,pending=null,pendH=null,ovBusy=false,sheet='';
+let lastOrig=null,origSaved=true,lastBase='',rotTry=0,needRestart=false,lastBlob=null,lastSaved=true,lastUrl=null,pending=null,pendH=null,ovBusy=false,sheet='';
 
 /* ---------- pengaturan ---------- */
-const KEYS=['judul','koor','alamat','ket','arah','tJudul','tKoor','tAlamat','tWaktu','tKet','tArah','tMap','mapStyle','mapZoom','posisi','ukuran','auto','sysCam','tglMode'];
+const KEYS=['judul','koor','alamat','ket','arah','tJudul','tKoor','tAlamat','tWaktu','tKet','tArah','tMap','mapStyle','mapZoom','posisi','ukuran','saveOrig','sysCam','tglMode'];
 function save(){try{const s={mode};KEYS.forEach(k=>{const e=$(k);s[k]=e.type==='checkbox'?e.checked:e.value});localStorage.setItem('geotag3',JSON.stringify(s))}catch(e){}}
 function load(){try{const s=JSON.parse(localStorage.getItem('geotag3')||'{}');if(s.mode==='kamera'||s.mode==='normal')mode=s.mode;KEYS.forEach(k=>{if(!(k in s))return;const e=$(k);e.type==='checkbox'?e.checked=s[k]:e.value=s[k]})}catch(e){}}
 
@@ -328,7 +329,7 @@ let dT;function dirty(){clearTimeout(dT);dT=setTimeout(drawOverlay,120)}
 async function drawOverlay(){
  if(ovBusy||!camOn||sheet)return;ovBusy=true;
  try{
-  const c=$('ov'),W=c.clientWidth,H=c.clientHeight;if(!W||!H)return;
+  layoutFrame();const c=$('ov'),W=c.clientWidth,H=c.clientHeight;if(!W||!H)return;
   const d=Math.min(window.devicePixelRatio||1,2),cw=Math.round(W*d),ch=Math.round(H*d);
   if(c.width!==cw||c.height!==ch){c.width=cw;c.height=ch}
   const x=c.getContext('2d');x.clearRect(0,0,cw,ch);await drawPanel(x,cw,ch,rowsLive());
@@ -336,18 +337,21 @@ async function drawOverlay(){
  }catch(e){}finally{ovBusy=false}
 }
 setInterval(()=>{if(camOn&&!sheet)drawOverlay()},1000);
-window.addEventListener('resize',()=>{dirty()});
+window.addEventListener('resize',()=>{layoutFrame();dirty()});
 let rT;function onRot(){clearTimeout(rT);rT=setTimeout(()=>{rotTry=0;if(sheet){needRestart=true;return}if(camOn){stopCam();startCam()}else dirty()},350)}
 window.addEventListener('orientationchange',onRot);
 try{if(screen.orientation&&screen.orientation.addEventListener)screen.orientation.addEventListener('change',onRot)}catch(e){}
 
 /* ---------- kamera ---------- */
+function layoutFrame(){const v=$('view'),W=v.clientWidth,H=v.clientHeight;if(!W||!H)return;
+ const r=H>=W?3/4:4/3;let w=W,h=W/r;if(h>H){h=H;w=H*r}
+ const f=$('frame');f.style.width=Math.round(w)+'px';f.style.height=Math.round(h)+'px'}
 async function startCam(){
  if(stream||starting||sheet==='set'||busy)return;starting=true;
  try{
   if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia)throw new Error('tidak didukung');
-  const pt=$('view').clientHeight>=$('view').clientWidth;
-  stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:facing},width:{ideal:pt?1080:1920},height:{ideal:pt?1920:1080}},audio:false});
+  layoutFrame();const pt=$('view').clientHeight>=$('view').clientWidth;
+  stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:facing},width:{ideal:pt?1920:2560},height:{ideal:pt?2560:1920},aspectRatio:{ideal:pt?3/4:4/3}},audio:false});
   const v=$('vid');v.srcObject=stream;try{await v.play()}catch(e){}
   if(!v.videoWidth)await new Promise(r=>{v.onloadedmetadata=r;setTimeout(r,1500)});
   if(v.videoWidth&&(v.videoWidth>v.videoHeight)===pt&&rotTry<2){rotTry++;stopCam();setTimeout(startCam,250);return}
@@ -360,20 +364,29 @@ document.addEventListener('visibilitychange',()=>{if(document.hidden)stopCam();e
 
 /* ---------- hasil & simpan ---------- */
 const b64=blob=>new Promise((ok,no)=>{const r=new FileReader();r.onload=()=>ok(String(r.result).split(',')[1]);r.onerror=no;r.readAsDataURL(blob)});
-async function saveBlob(blob){
- const name='GEO_'+localISO(new Date()).replace(/[-:T]/g,'')+'_'+Math.floor(Math.random()*900+100)+'.jpg';
- if(native&&GS){const r=await GS.savePhoto({data:await b64(blob),fileName:name});return 'DCIM/Kamera Geotag/'+name}
+const tmo=(p,ms)=>Promise.race([p,new Promise((_,no)=>setTimeout(()=>no(new Error('penyimpanan tidak merespons')),ms))]);
+const newBase=()=>'GEO_'+localISO(new Date()).replace(/[-:T]/g,'')+'_'+Math.floor(Math.random()*900+100);
+async function saveBlob(blob,name){
+ if(native&&GS){
+  try{const d=await b64(blob),CH=1500000;
+   for(let i=0;i<d.length;i+=CH)await tmo(GS.savePhoto({data:d.slice(i,i+CH),fileName:name,first:i===0,last:i+CH>=d.length}),60000);
+   return 'DCIM/Kamera Geotag/'+name}
+  catch(e){const m=(e&&e.message)||String(e);throw new Error(/not implemented|UNIMPLEMENTED/i.test(m)?'plugin penyimpanan belum terpasang (pastikan semua file folder android sudah ter-upload ke GitHub dan build ulang)':m)}
+ }
  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),4000);return 'diunduh: '+name;
 }
 async function doSave(){
- if(!lastBlob||lastSaved)return;
- $('rst').textContent='Menyimpan ke galeri…';
- try{const w=await saveBlob(lastBlob);lastSaved=true;$('btnSimpan').disabled=true;$('rst').textContent='✓ Tersimpan di galeri ('+w+')'}
- catch(e){const m=(e&&e.message)||String(e);$('rst').textContent='✗ Gagal menyimpan: '+m;showErr('Gagal simpan ke galeri: '+m)}
+ if(!lastBlob||(lastSaved&&(!lastOrig||origSaved)))return;
+ $('btnSimpan').style.display='none';$('rst').textContent='Menyimpan ke galeri…';
+ try{
+  if(!lastSaved){await saveBlob(lastBlob,lastBase+'.jpg');lastSaved=true}
+  if(lastOrig&&!origSaved){await saveBlob(lastOrig,lastBase+'_asli.jpg');origSaved=true}
+  $('rst').textContent='✓ Tersimpan di galeri (DCIM/Kamera Geotag): foto watermark'+(lastOrig?' + foto asli':'');
+ }catch(e){const m=(e&&e.message)||String(e);$('rst').textContent='✗ Gagal menyimpan: '+m;$('btnSimpan').style.display='block';showErr('Gagal simpan ke galeri: '+m)}
 }
-function show(blob,msg){
- if(lastUrl)URL.revokeObjectURL(lastUrl);lastBlob=blob;lastUrl=URL.createObjectURL(blob);lastSaved=false;
- $('hasil').src=lastUrl;$('rst').textContent=msg||'';$('btnSimpan').disabled=false;openSheet('res');
+function show(blob,msg,orig){
+ if(lastUrl)URL.revokeObjectURL(lastUrl);lastBlob=blob;lastUrl=URL.createObjectURL(blob);lastSaved=false;lastOrig=orig||null;origSaved=!orig;lastBase=newBase();
+ $('hasil').src=lastUrl;$('rst').textContent=msg||'';$('btnSimpan').style.display='none';openSheet('res');
 }
 
 /* ---------- ambil foto dari kamera langsung ---------- */
@@ -382,18 +395,19 @@ async function shoot(){
  if(!v.videoWidth){toast('Kamera belum siap');return}
  busy=true;$('shut').disabled=true;
  try{
-  const vw=v.videoWidth,vh=v.videoHeight,A=$('view').clientWidth/$('view').clientHeight;
+  layoutFrame();const vw=v.videoWidth,vh=v.videoHeight,A=$('frame').clientWidth/$('frame').clientHeight;
   let sw=vw,sh=vh;if(vw/vh>A)sw=vh*A;else sh=vw/A;
   const k=Math.min(1,MAXSIDE/Math.max(sw,sh)),w=Math.round(sw*k),h=Math.round(sh*k);
   const c=document.createElement('canvas');c.width=w;c.height=h;const x=c.getContext('2d');
   x.drawImage(v,(vw-sw)/2,(vh-sh)/2,sw,sh,0,0,w,h);
   if(navigator.vibrate)navigator.vibrate(25);
+  const orig=$('saveOrig').checked?await new Promise(r=>c.toBlob(r,'image/jpeg',0.92)):null;
   if(mode==='normal'&&lastPos&&!lastAddr&&$('tAlamat').checked){const a=await addrFor(lastPos);if(a&&!lastAddr)lastAddr={c:lastPos,t:a}}
   await drawPanel(x,w,h,rowsLive());
   const blob=await new Promise(r=>c.toBlob(r,'image/jpeg',0.9));c.width=c.height=0;
   if(!blob)throw new Error('gagal membuat gambar');
-  show(blob,$('auto').checked?'Menyimpan ke galeri…':'');
-  if($('auto').checked)await doSave();
+  show(blob,'Menyimpan ke galeri…',orig);
+  await doSave();
  }catch(e){showErr('Gagal ambil foto: '+((e&&e.message)||e))}
  finally{busy=false;$('shut').disabled=false}
 }
@@ -418,16 +432,16 @@ async function handle(files,asMode){
   let real=null,ex={alt:null,arah:null};
   if(mode==='normal'){real=await Promise.race([pending||realData(),sleep(15000).then(()=>null)])||{koor:'GPS tidak tersedia',alamat:''};ex.alt=real.alt;ex.arah=pendH}
   else{const ll=parseLL($('koor').value);ex.alt=$('ket').value.trim()||($('tKet').checked&&ll?await elevFor(ll):null);ex.arah=$('arah').value.trim()||(mode==='kamera'?pendH:null)}
-  let ok=0,gagal='',last=null;
+  let ok=0,gagal='',last=null,lastFile=null;const wantOrig=$('saveOrig').checked&&asMode!=='galeri';
   for(let i=0;i<files.length;i++){
    note('Memproses '+(i+1)+'/'+files.length+'…');await sleep(30);
-   try{const bl=await makePhoto(files[i],real,ex);last=bl;
-    if($('auto').checked&&i<files.length-1){await saveBlob(bl)}
+   try{const bl=await makePhoto(files[i],real,ex);last=bl;lastFile=files[i];
+    if(i<files.length-1){await saveBlob(bl,newBase()+'.jpg')}
     ok++}
    catch(e){gagal=(e&&e.message)||String(e)}
   }
   note('');
-  if(last){show(last,$('auto').checked?'Menyimpan ke galeri…':(ok+' foto selesai'));if($('auto').checked){await doSave();if(ok>1)$('rst').textContent+=' · total '+ok+' foto'}}
+  if(last){show(last,'Menyimpan ke galeri…',wantOrig?lastFile:null);await doSave();if(ok>1)$('rst').textContent+=' · total '+ok+' foto'}
   if(gagal)showErr('Gagal: '+gagal);
  }catch(e){note('');showErr('Gagal: '+((e&&e.message)||e))}
  finally{mode=prev;busy=false}
