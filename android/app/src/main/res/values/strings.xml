@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Kamera Geotag</string>
+    <string name="title_activity_main">Kamera Geotag</string>
+    <string name="package_name">id.desa.kamerageotag</string>
+    <string name="custom_url_scheme">id.desa.kamerageotag</string>
+</resources>

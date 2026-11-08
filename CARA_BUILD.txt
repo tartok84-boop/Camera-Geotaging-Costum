@@ -1,0 +1,9 @@
+CARA MEMBUAT / MEMPERBARUI APK
+1. Di GitHub, upload ulang SEMUA isi folder ini (timpa file lama), termasuk folder .github dan android.
+2. Tab Actions > Build APK > Run workflow, tunggu +-5 menit.
+3. Unduh artifact "Kamera-Geotag-APK" > ekstrak > app-debug.apk.
+4. PENTING: HAPUS aplikasi Kamera Geotag versi lama dari HP dulu (tanda tangan APK berbeda),
+   lalu pasang yang baru: adb install app-debug.apk
+   Mulai versi ini tanda tangan APK tetap, jadi update berikutnya bisa langsung menimpa
+   (adb install -r app-debug.apk) tanpa hapus aplikasi.
+Foto tersimpan di galeri, album: Pictures/Kamera Geotag.
