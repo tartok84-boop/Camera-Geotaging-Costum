@@ -45,7 +45,7 @@ textarea{min-height:64px;resize:vertical}
 .bt.s{background:var(--bd);color:var(--tx)}
 .i{font-size:13px;color:var(--mu);margin:0 0 6px}
 .pr{white-space:pre-wrap;font-size:13px;background:#000a;color:#fff;border-radius:8px;padding:8px;margin-top:8px}
-#hasil{display:block;max-width:100%;max-height:calc(100vh - 190px);margin:0 auto;border-radius:10px;background:#000}
+#hasil,#hasilC{margin:0 auto;max-width:100%;max-height:calc(100vh - 250px);width:auto;height:auto;border-radius:10px;background:#000}
 .h{display:none}
 #toast{position:fixed;left:12px;right:12px;bottom:130px;background:#222;color:#fff;border-radius:10px;padding:10px 12px;text-align:center;display:none;z-index:40}
 #err{position:fixed;top:0;left:0;right:0;z-index:99;background:#b00020;color:#fff;font-size:12px;padding:6px 10px;white-space:pre-wrap;display:none}
@@ -135,10 +135,11 @@ textarea{min-height:64px;resize:vertical}
 <div class="sheet" id="res" style="background:#000">
   <div class="hd" style="background:#111;color:#fff;border-color:#333"><button id="resBack" style="color:#fff" aria-label="Tutup">←</button>Hasil foto</div>
   <div class="in">
-    <div style="padding:8px 0"><img id="hasil" alt="Hasil"></div>
-    <div class="i" id="rst" style="color:#ccc;text-align:center"></div>
+    <div style="padding:8px 0"><canvas id="hasilC" style="display:none"></canvas><img id="hasil" alt="Hasil" style="display:none"></div>
+    <div class="i" id="rst" style="color:#ddd;text-align:center;font-size:15px;white-space:pre-line;padding:6px 0"></div>
     <div class="r" style="margin-top:8px">
       <button class="bt s" id="btnSimpan" style="display:none">↻ Coba simpan lagi</button>
+      <button class="bt s" id="btnLihat" style="display:none">🖼️ Lihat di galeri</button>
       <button class="bt" id="btnAgain">📷 Foto lagi</button>
     </div>
   </div>
@@ -284,13 +285,14 @@ const rr=(x,X,Y,W,H,r)=>{x.beginPath();x.moveTo(X+r,Y);x.arcTo(X+W,Y,X+W,Y+H,r);
 const TILE={osm:(z,X,Y)=>'https://tile.openstreetmap.org/'+z+'/'+X+'/'+Y+'.png',sat:(z,X,Y)=>'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/'+z+'/'+Y+'/'+X};
 const ATTR={osm:'© OpenStreetMap',sat:'Esri'};
 const tileC=new Map(),tileF=new Map();
-function loadImg(u){
+function loadImg(u,fast){
  if(tileC.has(u))return Promise.resolve(tileC.get(u));
+ if(fast)return Promise.resolve(null);
  if(tileF.has(u)&&Date.now()-tileF.get(u)<30000)return Promise.resolve(null);
  return new Promise(ok=>{const i=new Image();i.crossOrigin='anonymous';const t=setTimeout(()=>{i.src='';tileF.set(u,Date.now());ok(null)},7000);
   i.onload=()=>{clearTimeout(t);tileC.set(u,i);if(tileC.size>16)tileC.delete(tileC.keys().next().value);ok(i)};
   i.onerror=()=>{clearTimeout(t);tileF.set(u,Date.now());ok(null)};i.src=u})}
-async function getMap(ll,z,st){
+async function getMap(ll,z,st,fast){
  const W=300,n=Math.pow(2,z),sn=Math.sin(ll.lat*Math.PI/180),
   px=(ll.lon+180)/360*n*256,py=(0.5-Math.log((1+sn)/(1-sn))/(4*Math.PI))*n*256,x0=px-W/2,y0=py-W/2,
   c=document.createElement('canvas');c.width=c.height=W;const g=c.getContext('2d');
@@ -298,14 +300,14 @@ async function getMap(ll,z,st){
  const jobs=[];let okN=0;
  for(let tx=Math.floor(x0/256);tx<=Math.floor((x0+W)/256);tx++)for(let ty=Math.floor(y0/256);ty<=Math.floor((y0+W)/256);ty++){
   if(ty<0||ty>=n)continue;const X=((tx%n)+n)%n;
-  jobs.push(loadImg(TILE[st](z,X,ty)).then(im=>{if(im){g.drawImage(im,tx*256-x0,ty*256-y0);okN++}}))}
+  jobs.push(loadImg(TILE[st](z,X,ty),fast).then(im=>{if(im){g.drawImage(im,tx*256-x0,ty*256-y0);okN++}}))}
  await Promise.all(jobs);return c;
 }
-async function drawPanel(x,w,h,inf){
+async function drawPanel(x,w,h,inf,fast){
  const rs=inf.r,showMap=$('tMap').checked&&inf.ll;
  if(!rs.length&&!showMap)return;
  const ref=w>h?h*1.25:Math.min(w,h),fs=Math.max(12,Math.round(ref/34*parseFloat($('ukuran').value))),m=Math.round(fs*.6),p=Math.round(fs*.6),lh=Math.round(fs*1.3),S=Math.round(fs*5.2);
- const st=$('mapStyle').value,mp=showMap?await getMap(inf.ll,parseInt($('mapZoom').value),st):null;
+ const st=$('mapStyle').value,mp=showMap?await getMap(inf.ll,parseInt($('mapZoom').value),st,fast):null;
  const tx=m+p+(mp?S+p:0),tw=w-m-p-tx,L=[];
  rs.forEach(r=>{x.font=(r.b?'bold ':'')+Math.round(r.b?fs*1.2:fs)+'px sans-serif';wrap(x,r.t,tw).forEach(t=>L.push({t,b:r.b}))});
  const th=L.length*lh,ih=Math.max(mp?S:0,th),H=ih+p*2,Y=$('posisi').value==='atas'?m:h-m-H;
@@ -368,48 +370,61 @@ const tmo=(p,ms)=>Promise.race([p,new Promise((_,no)=>setTimeout(()=>no(new Erro
 const newBase=()=>'GEO_'+localISO(new Date()).replace(/[-:T]/g,'')+'_'+Math.floor(Math.random()*900+100);
 async function saveBlob(blob,name){
  if(native&&GS){
-  try{const d=await b64(blob),CH=1500000;
-   for(let i=0;i<d.length;i+=CH)await tmo(GS.savePhoto({data:d.slice(i,i+CH),fileName:name,first:i===0,last:i+CH>=d.length}),60000);
-   return 'DCIM/Kamera Geotag/'+name}
+  try{const d=await b64(blob),CH=1500000;let res=null;
+   for(let i=0;i<d.length;i+=CH)res=await tmo(GS.savePhoto({data:d.slice(i,i+CH),fileName:name,first:i===0,last:i+CH>=d.length}),60000);
+   return (res&&res.uri)||''}
   catch(e){const m=(e&&e.message)||String(e);throw new Error(/not implemented|UNIMPLEMENTED/i.test(m)?'plugin penyimpanan belum terpasang (pastikan semua file folder android sudah ter-upload ke GitHub dan build ulang)':m)}
  }
- const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),4000);return 'diunduh: '+name;
+ const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),4000);return '';
 }
-async function doSave(){
- if(!lastBlob||(lastSaved&&(!lastOrig||origSaved)))return;
- $('btnSimpan').style.display='none';$('rst').textContent='Menyimpan ke galeri…';
+let cur=null;
+const enc=(c,q)=>new Promise(r=>c.toBlob(r,'image/jpeg',q||0.9));
+const mkJob=(blob,orig,prep)=>({base:newBase(),blob,orig:orig||null,prep:prep||null,saved:false,origSaved:!orig,uri:'',running:false,note:''});
+function setStatus(job,t,k){if(cur!==job)return;const e=$('rst');e.textContent=t;e.style.color=k==='bad'?'#ff8a80':(k==='ok'?'#7cfc9a':'#ddd')}
+async function persist(job){
+ if(job.running)return;job.running=true;
+ if(cur===job){$('btnSimpan').style.display='none';$('btnLihat').style.display='none'}
+ setStatus(job,'Menyimpan ke galeri…');
  try{
-  if(!lastSaved){await saveBlob(lastBlob,lastBase+'.jpg');lastSaved=true}
-  if(lastOrig&&!origSaved){await saveBlob(lastOrig,lastBase+'_asli.jpg');origSaved=true}
-  $('rst').textContent='✓ Tersimpan di galeri (DCIM/Kamera Geotag): foto watermark'+(lastOrig?' + foto asli':'');
- }catch(e){const m=(e&&e.message)||String(e);$('rst').textContent='✗ Gagal menyimpan: '+m;$('btnSimpan').style.display='block';showErr('Gagal simpan ke galeri: '+m)}
+  if(job.prep)await job.prep;
+  if(!job.blob)throw new Error('gagal membuat gambar');
+  if(!job.saved){job.uri=await saveBlob(job.blob,job.base+'.jpg');job.saved=true}
+  if(job.orig&&!job.origSaved){await saveBlob(job.orig,job.base+'_asli.jpg');job.origSaved=true}
+  setStatus(job,'✓ Tersimpan di galeri\nAlbum: DCIM/Kamera Geotag\n'+job.base+'.jpg'+(job.orig?'  +  _asli':'')+job.note,'ok');
+  if(cur===job){toast('✓ Foto tersimpan di galeri');if(native&&GS&&job.uri)$('btnLihat').style.display='block'}
+ }catch(e){const m=(e&&e.message)||String(e);setStatus(job,'✗ Gagal menyimpan: '+m,'bad');if(cur===job)$('btnSimpan').style.display='block';showErr('Gagal simpan ke galeri: '+m)}
+ finally{job.running=false}
 }
-function show(blob,msg,orig){
- if(lastUrl)URL.revokeObjectURL(lastUrl);lastBlob=blob;lastUrl=URL.createObjectURL(blob);lastSaved=false;lastOrig=orig||null;origSaved=!orig;lastBase=newBase();
- $('hasil').src=lastUrl;$('rst').textContent=msg||'';$('btnSimpan').style.display='none';openSheet('res');
+function openResult(job){cur=job;$('rst').textContent='';$('btnSimpan').style.display='none';$('btnLihat').style.display='none';if(sheet!=='res')openSheet('res')}
+function showCanvasPreview(job,c){
+ const pc=$('hasilC'),k=Math.min(1,1280/Math.max(c.width,c.height));pc.width=Math.round(c.width*k);pc.height=Math.round(c.height*k);
+ pc.getContext('2d').drawImage(c,0,0,pc.width,pc.height);pc.style.display='block';$('hasil').style.display='none';openResult(job);
+}
+function showBlobPreview(job,blob){
+ if(lastUrl)URL.revokeObjectURL(lastUrl);lastUrl=URL.createObjectURL(blob);
+ $('hasil').src=lastUrl;$('hasil').style.display='block';$('hasilC').style.display='none';openResult(job);
 }
 
 /* ---------- ambil foto dari kamera langsung ---------- */
 async function shoot(){
  if(busy||!camOn)return;const v=$('vid');
  if(!v.videoWidth){toast('Kamera belum siap');return}
- busy=true;$('shut').disabled=true;
+ busy=true;
  try{
   layoutFrame();const vw=v.videoWidth,vh=v.videoHeight,A=$('frame').clientWidth/$('frame').clientHeight;
   let sw=vw,sh=vh;if(vw/vh>A)sw=vh*A;else sh=vw/A;
   const k=Math.min(1,MAXSIDE/Math.max(sw,sh)),w=Math.round(sw*k),h=Math.round(sh*k);
   const c=document.createElement('canvas');c.width=w;c.height=h;const x=c.getContext('2d');
   x.drawImage(v,(vw-sw)/2,(vh-sh)/2,sw,sh,0,0,w,h);
-  if(navigator.vibrate)navigator.vibrate(25);
-  const orig=$('saveOrig').checked?await new Promise(r=>c.toBlob(r,'image/jpeg',0.92)):null;
-  if(mode==='normal'&&lastPos&&!lastAddr&&$('tAlamat').checked){const a=await addrFor(lastPos);if(a&&!lastAddr)lastAddr={c:lastPos,t:a}}
-  await drawPanel(x,w,h,rowsLive());
-  const blob=await new Promise(r=>c.toBlob(r,'image/jpeg',0.9));c.width=c.height=0;
-  if(!blob)throw new Error('gagal membuat gambar');
-  show(blob,'Menyimpan ke galeri…',orig);
-  await doSave();
+  let c0=null;if($('saveOrig').checked){c0=document.createElement('canvas');c0.width=w;c0.height=h;c0.getContext('2d').drawImage(c,0,0)}
+  if(navigator.vibrate)navigator.vibrate(20);
+  await drawPanel(x,w,h,rowsLive(),true);
+  const job=mkJob(null,c0?{}:null,null);
+  job.prep=(async()=>{job.blob=await enc(c,0.9);c.width=c.height=0;if(c0){job.orig=await enc(c0,0.92);c0.width=c0.height=0}})();
+  showCanvasPreview(job,c);
+  persist(job);
  }catch(e){showErr('Gagal ambil foto: '+((e&&e.message)||e))}
- finally{busy=false;$('shut').disabled=false}
+ finally{busy=false}
 }
 
 /* ---------- foto dari galeri / kamera bawaan ---------- */
@@ -441,7 +456,7 @@ async function handle(files,asMode){
    catch(e){gagal=(e&&e.message)||String(e)}
   }
   note('');
-  if(last){show(last,'Menyimpan ke galeri…',wantOrig?lastFile:null);await doSave();if(ok>1)$('rst').textContent+=' · total '+ok+' foto'}
+  if(last){const job=mkJob(last,wantOrig?lastFile:null,null);if(ok>1)job.note='\nTotal '+ok+' foto diproses';showBlobPreview(job,last);persist(job)}
   if(gagal)showErr('Gagal: '+gagal);
  }catch(e){note('');showErr('Gagal: '+((e&&e.message)||e))}
  finally{mode=prev;busy=false}
@@ -465,7 +480,8 @@ $('btnSet').onclick=()=>{preview();openSheet('set')};
 $('setBack').onclick=()=>closeSheet();
 $('resBack').onclick=()=>closeSheet();
 $('btnAgain').onclick=()=>closeSheet();
-$('btnSimpan').onclick=doSave;
+$('btnSimpan').onclick=()=>{if(cur)persist(cur)};
+$('btnLihat').onclick=()=>{if(cur&&GS&&cur.uri)GS.openPhoto({uri:cur.uri}).catch(e=>showErr('Tidak bisa membuka galeri: '+((e&&e.message)||e)))};
 $('shut').onclick=()=>{
  if(busy)return;
  if($('sysCam').checked){

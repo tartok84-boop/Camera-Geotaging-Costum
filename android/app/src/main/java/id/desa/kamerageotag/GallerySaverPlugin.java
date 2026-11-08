@@ -3,6 +3,7 @@ package id.desa.kamerageotag;
 import android.Manifest;
 import android.content.ContentResolver;
 import android.content.ContentValues;
+import android.content.Intent;
 import android.media.MediaScannerConnection;
 import android.net.Uri;
 import android.os.Build;
@@ -65,6 +66,24 @@ public class GallerySaverPlugin extends Plugin {
             return;
         }
         store(call);
+    }
+
+    @PluginMethod
+    public void openPhoto(PluginCall call) {
+        String u = call.getString("uri");
+        if (u == null || !u.startsWith("content:")) {
+            call.reject("Alamat foto tidak valid");
+            return;
+        }
+        try {
+            Intent i = new Intent(Intent.ACTION_VIEW);
+            i.setDataAndType(Uri.parse(u), "image/jpeg");
+            i.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_ACTIVITY_NEW_TASK);
+            getContext().startActivity(i);
+            call.resolve();
+        } catch (Exception e) {
+            call.reject("Tidak bisa membuka galeri: " + e);
+        }
     }
 
     @PermissionCallback
