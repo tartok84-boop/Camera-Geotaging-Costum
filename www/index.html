@@ -161,7 +161,7 @@ const native=!!(window.Capacitor&&Capacitor.isNativePlatform&&Capacitor.isNative
 let GS=null;try{if(native)GS=Capacitor.registerPlugin('GallerySaver')}catch(e){}
 let mode='normal',facing='environment',stream=null,starting=false,camOn=false,busy=false;
 let lastPos=null,lastAddr=null,lastAddrTry=0,addrBusy=false,curHeading=null,gpsId=null,oriT=0;
-let lastBlob=null,lastSaved=true,lastUrl=null,pending=null,pendH=null,ovBusy=false,sheet='';
+let rotTry=0,needRestart=false,lastBlob=null,lastSaved=true,lastUrl=null,pending=null,pendH=null,ovBusy=false,sheet='';
 
 /* ---------- pengaturan ---------- */
 const KEYS=['judul','koor','alamat','ket','arah','tJudul','tKoor','tAlamat','tWaktu','tKet','tArah','tMap','mapStyle','mapZoom','posisi','ukuran','auto','sysCam','tglMode'];
@@ -303,7 +303,7 @@ async function getMap(ll,z,st){
 async function drawPanel(x,w,h,inf){
  const rs=inf.r,showMap=$('tMap').checked&&inf.ll;
  if(!rs.length&&!showMap)return;
- const fs=Math.max(12,Math.round(Math.min(w,h)/34*parseFloat($('ukuran').value))),m=Math.round(fs*.6),p=Math.round(fs*.6),lh=Math.round(fs*1.3),S=Math.round(fs*5.2);
+ const ref=w>h?h*1.25:Math.min(w,h),fs=Math.max(12,Math.round(ref/34*parseFloat($('ukuran').value))),m=Math.round(fs*.6),p=Math.round(fs*.6),lh=Math.round(fs*1.3),S=Math.round(fs*5.2);
  const st=$('mapStyle').value,mp=showMap?await getMap(inf.ll,parseInt($('mapZoom').value),st):null;
  const tx=m+p+(mp?S+p:0),tw=w-m-p-tx,L=[];
  rs.forEach(r=>{x.font=(r.b?'bold ':'')+Math.round(r.b?fs*1.2:fs)+'px sans-serif';wrap(x,r.t,tw).forEach(t=>L.push({t,b:r.b}))});
@@ -337,15 +337,21 @@ async function drawOverlay(){
 }
 setInterval(()=>{if(camOn&&!sheet)drawOverlay()},1000);
 window.addEventListener('resize',()=>{dirty()});
+let rT;function onRot(){clearTimeout(rT);rT=setTimeout(()=>{rotTry=0;if(sheet){needRestart=true;return}if(camOn){stopCam();startCam()}else dirty()},350)}
+window.addEventListener('orientationchange',onRot);
+try{if(screen.orientation&&screen.orientation.addEventListener)screen.orientation.addEventListener('change',onRot)}catch(e){}
 
 /* ---------- kamera ---------- */
 async function startCam(){
  if(stream||starting||sheet==='set'||busy)return;starting=true;
  try{
   if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia)throw new Error('tidak didukung');
-  stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:facing},width:{ideal:1920},height:{ideal:1080}},audio:false});
-  $('vid').srcObject=stream;try{await $('vid').play()}catch(e){}
-  camOn=true;note('');syncSensors();drawOverlay();
+  const pt=$('view').clientHeight>=$('view').clientWidth;
+  stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:facing},width:{ideal:pt?1080:1920},height:{ideal:pt?1920:1080}},audio:false});
+  const v=$('vid');v.srcObject=stream;try{await v.play()}catch(e){}
+  if(!v.videoWidth)await new Promise(r=>{v.onloadedmetadata=r;setTimeout(r,1500)});
+  if(v.videoWidth&&(v.videoWidth>v.videoHeight)===pt&&rotTry<2){rotTry++;stopCam();setTimeout(startCam,250);return}
+  rotTry=0;camOn=true;note('');syncSensors();drawOverlay();
  }catch(e){camOn=false;stream=null;note('Kamera tidak bisa dibuka ('+(e.name||e.message)+'). Izinkan akses kamera untuk aplikasi ini, atau aktifkan "kamera bawaan HP" di Pengaturan.')}
  finally{starting=false}
 }
@@ -437,6 +443,7 @@ function closeSheet(fromPop){
  if(!sheet)return;const n=sheet;$(n).style.display='none';sheet='';
  if(!fromPop){try{history.back()}catch(e){}}
  if(n==='set'){save();dirty()}
+ if(needRestart){needRestart=false;stopCam()}
  startCam();
 }
 window.addEventListener('popstate',()=>{if(sheet)closeSheet(true)});
